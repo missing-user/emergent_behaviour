@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Emergent Behaviour</title>
+</head>
+
+<body>
+  <h1>Emergent Behaviour</h1>
+  <p>I saw a video demonstrating this weird behaviour on YT and tried to reproduce it, it's a collision system, but without the velocity modification you'd usually do. When things collide, their v stays the same, they just get pushed away in space. Over time, all the circles will reach stable orbits, where they don't (or at least rarely) collide! The slider controls the simulation timestep.</p>
+  <input type="range" min=".01" max="1" step="any" style="width: 100%;" oninput="dt = this.value/stepsPerFrame"
+    name="timestep" id="timestep">
+  <canvas id="canvas" width="1200" height="1200"></canvas>
+</body>
+<script src="script.js"></script>
+
+</html>
