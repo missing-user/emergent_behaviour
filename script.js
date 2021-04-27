@@ -18,7 +18,7 @@ function Ball(x, y, dx, dy, r) {
   this.r = r;
 
   this.draw = function () {
-    ctx.fillStyle = 'hsl(0,' + ~~Math.min(100, this.colliding) + '%,50%)';
+    ctx.fillStyle = 'hsl(0,' + ~~Math.min(100, this.colliding) + '%,' + ~~Math.min(50, this.colliding / 2) + '%)';
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
     ctx.fill();
