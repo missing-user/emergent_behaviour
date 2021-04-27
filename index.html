@@ -26,7 +26,7 @@
     without the velocity modification you'd usually do. When things collide, their v stays the same, they just get
     pushed away in space. Over time, all the circles will reach stable orbits, where they don't (or at least rarely)
     collide! The slider controls the simulation timestep.</p>
-  <input type="range" min=".002" max="1" step="any" style="width: 100%;" oninput="dt = this.value/stepsPerFrame"
+  <input type="range" min=".002" max=".5" step="any" style="width: 100%;" oninput="dt = this.value/stepsPerFrame"
     name="timestep" id="timestep">
   <canvas id="canvas" width="1200" height="1200"></canvas>
 </body>

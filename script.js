@@ -1,6 +1,6 @@
 var canvas = document.querySelector('canvas');
 var ctx = canvas.getContext('2d');
-const stepsPerFrame = 100;
+const stepsPerFrame = 50;
 var dt = .1 / stepsPerFrame;
 const W = canvas.width;
 const H = canvas.height;
@@ -16,8 +16,22 @@ function Ball(x, y, dx, dy, r) {
   this.dx = dx;
   this.dy = dy;
   this.r = r;
+  this.locationHistory = []
 
   this.draw = function () {
+    this.locationHistory.push([this.x, this.y])
+    while (this.locationHistory.length > 2 / stepsPerFrame / dt)
+      this.locationHistory.shift();
+    ctx.beginPath()
+    for (let i = 0; i < this.locationHistory.length; i++) {
+      const hist = this.locationHistory[i];
+      ctx.lineTo(hist[0], hist[1])
+    }
+    ctx.strokeStyle = "#999"
+    ctx.stroke()
+
+
+    //fill the circle
     ctx.fillStyle = 'hsl(0,' + ~~Math.min(100, this.colliding) + '%,' + ~~Math.min(50, this.colliding / 2) + '%)';
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
@@ -68,6 +82,7 @@ function animate() {
   }
   for (var ball of balls)
     ball.draw()
+
   requestAnimationFrame(animate);
 }
 
