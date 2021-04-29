@@ -4,6 +4,12 @@ const gl = canvas.getContext("webgl");
 var frameId;
 enableFloatTextures(gl);
 
+var iterations = 15;
+if (window.devicePixelRatio > 2) {
+  document.getElementById('mobileWarning').style.display = '';
+  iterations = 5
+}
+
 const vertexInfo = twgl.createBufferInfoFromArrays(gl, { a_position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0], });
 function init() {
   //initialize the render shader
@@ -44,7 +50,7 @@ function init() {
     simUniforms.k = document.getElementById('kslider').value;
 
     twgl.setUniforms(simulatorInfo, simUniforms);
-    for (var i = 0; i < 15; i++) {
+    for (var i = 0; i < iterations; i++) {
       //frame buffer swap
       gl.bindTexture(gl.TEXTURE_2D, t1);
       gl.bindFramebuffer(gl.FRAMEBUFFER, fb2);

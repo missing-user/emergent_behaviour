@@ -27,8 +27,11 @@
           at a constant kill rate. For most parameter combinations the system is stable and converges to a solution
           quickly, with either chemical B disappearing completely, or reacting fast that it consumes all of the incoming
           chemical A. But for certains diffusion speeds of A and B, interesting patterns start to emerge, with organic
-          structures forming.  Here's a <a href="https://www.karlsims.com/rd.html">great explanation</a> and the
+          structures forming. Here's a <a href="https://www.karlsims.com/rd.html">great explanation</a> and the
           according <a href="https://en.wikipedia.org/wiki/Reaction%E2%80%93diffusion_system">Wikipedia article</a>.</p>
+        <p id="mobileWarning" style="display: none;">
+          <b style="color: red;">Due to WebGL issues, the simulation doesn't work well on mobile</b>
+        </p>
       </div>
     </div>
 
@@ -49,8 +52,8 @@
           <input id="dbslider" type="range" step="any" min="0.05" max=".3" value=".1">
         </label>
       </div>
-      <div class="one-half column">
 
+      <div class="one-half column">
         <label>Preset
           <select id="presets" class="u-full-width" onchange="setPreset(this.value);init();">
             <option value='{"D_a": 0.2, "D_b": 0.1, "f": 0.0545, "k": 0.062}' selected>Worms</option>
@@ -74,8 +77,6 @@
       </div>
     </div>
   </div>
-
-
 
   <script id="vs" type="x-shader/x-vertex">
     attribute vec4 a_position;
