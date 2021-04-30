@@ -1,16 +1,67 @@
-:root {
-  color-scheme: light dark;
-  /* both supported */
+p {
+  text-align: justify;
 }
 
-@media (min-width: 800px) {
-  html {
-    font-size: 90%;
+blockquote {
+  margin-left: 0;
+  margin-right: 0;
+  padding-left: 2em;
+  border-left: solid;
+}
+
+.headerLinks {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+}
+
+.headerLinks:after {
+  content: none;
+}
+
+.img_cont {
+  border-radius: .5rem;
+  overflow: hidden;
+}
+
+.img-hover-zoom {
+  transition: transform .25s ease;
+}
+
+/* The Transformation */
+
+.img-hover-zoom:hover {
+  transform: scale(1.5);
+}
+
+.lightText {
+  color: #FFF;
+  border-color: #FFF;
+}
+
+::selection {
+  background: #1EAEDB;
+}
+
+a.button {
+  display: inline-block;
+  padding: 8px 30px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  text-align: center;
+  font-size: .8em;
+  text-decoration: none;
+  white-space: nowrap;
+  line-height: 1.6em;
+}
+
+@media (prefers-color-scheme:dark) {
+  .lightText {
+    color: #2e3436;
+    border-color: #2e3436
   }
-}
-
-@media (min-width: 2000px) {
-  html {
-    font-size: 100%;
+  ::selection {
+    background: #729fcf;
   }
 }

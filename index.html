@@ -20,62 +20,123 @@
 
   <div class="container" style="margin-top: 1em;">
     <a href="/">Back to Home</a>
-    <div class="row">
-      <h1>Emergent Behaviour</h1>
-      <p>A few simulation experiments displaying complex behaviour emerging from simple rules.</p>
+    <div class="row" style="margin-bottom: 2.5em; margin-top: 1em;">
+      <h1 style="margin-bottom: 0;">Emergence</h1>
+      <h2><i>/ɪˈməːdʒ(ə)ns/</i></h2>
+      <blockquote cite="https://www.oxfordlearnersdictionaries.com/definition/english/emergence">
+        <i>noun</i>
+        <ol>
+          <li>
+            the process of becoming visible after being concealed. <br>
+            <em>"I misjudged the timing of my emergence"</em>
+          </li>
+          <li>
+            the process of coming into existence or prominence. <br>
+            <em>"the emergence of the environmental movement"</em>
+          </li>
+        </ol>
+      </blockquote>
 
-      <div class="row">
-        <h2><a href="./stableOrbits/">Collision avoidance</a></h2>
-      </div>
-      <div class="row">
-        <div class="one-half column">
-          <p>
-            A JS implementation recreating <a href="https://www.youtube.com/watch?v=SqpIcsN0FTI">this bug</a> I saw on
-            youtube. A basic collision system, but without conservation of momentum. When balls collide, their momentum
-            doesn't change, they just get moved to the side. Over time, the balls will find stable orbits without
-            collisions.
-          </p>
+      <p>
+        <b>Emergent behaviour</b> is what I'd like to focus on in the following experiments. Simple sets of rules, that
+        give rise to complex behaviour, oftentimes resembling living structures. Some examples for this kind of
+        emergence are <a href="https://playgameoflife.com/">Conways Game of life</a>,
+        <a href="https://en.wikipedia.org/wiki/Langton%27s_ant">Langton's Ant</a> and
+        <a href="https://inconvergent.net/generative/">generative algorithms</a> in general.
+      </p>
+    </div>
+
+
+    <!-- Collision avoidance -->
+    <div class="row" style="padding-bottom: 2rem;">
+      <h3>Collision avoidance</h3>
+      <em>24 Apr 2021</em>
+    </div>
+    <div class="row">
+      <div class="one-half column">
+        <p>A JS implementation recreating <a href="https://www.youtube.com/watch?v=SqpIcsN0FTI">this bug</a> I saw on
+          youtube. A basic collision system, but without conservation of momentum. When balls collide, their momentum
+          doesn't change, they just get moved to the side. Over time, the balls will find stable orbits without
+          collisions.</p>
+        <div class="row">
+          <div class="one-half column">
+            <a href="./stableOrbits/" class="button u-full-width">go to website</a>
+          </div>
         </div>
-        <div class="one-half column">
+      </div>
+
+      <div class="one-half column img_cont">
+        <a href="./stableOrbits/">
           <picture>
             <source media="(prefers-color-scheme: dark)" srcset="stableOrbits/preview_dark.png">
-            <img src="stableOrbits/preview.png" class="u-max-full-width" alt="stable orbits preview image">
+            <img loading="lazy" src="stableOrbits/preview.png" class="u-max-full-width img-hover-zoom"
+              alt="stable orbits preview image">
           </picture>
-        </div>
+        </a>
       </div>
-
-      <div class="row">
-        <h2><a href="./reactionDiffusion/">Reaction-Diffusion</a></h2>
-      </div>
-      <div class="row">
-        <div class="one-half column">
-          <p>
-            A reaction diffusion simulation utilizing the Gray-Scott model. Two chemicals react to form more of the
-            second chemical, while the resulting matter is continuously being removed from the system.
-          </p>
-        </div>
-
-        <div class="one-half column">
-          <img src="reactionDiffusion/images/bubbles.png" class="u-max-full-width"
-            alt="Gray-Scott reaction diffusion preview">
-        </div>
-      </div>
-
-
-      <div class="row">
-        <h2><a href="./physarium/">Physarium</a></h2>
-      </div>
-      <div class="row">
-        <div class="one-half column">
-          <p> WIP a slime mold simulation using millions of agents</p>
-        </div>
-
-        <div class="one-half column">
-          <!-- Physarium image -->
-        </div>
-      </div>
-
     </div>
+    <hr>
+
+
+
+    <!-- Reaction-Diffusion -->
+    <div class="row" style="padding-bottom: 2rem;">
+      <h3>Reaction-Diffusion</h3>
+      <em>28 Apr 2021</em>
+    </div>
+    <div class="row">
+      <div class="one-half column">
+        <p> A reaction diffusion simulation utilizing the Gray-Scott model. Two chemicals react to form more of the
+          second chemical, while the resulting matter is continuously being removed from the system.
+          <br>
+          <br>
+          The resulting patterns range resemble winding worms, merging bubbles and sometimes mitosis of cells.
+          Fascinating.
+        </p>
+        <div class="row">
+          <div class="one-half column">
+            <a href="./reactionDiffusion/" class="button u-full-width">go to website</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="one-half column img_cont">
+        <a href="./reactionDiffusion/">
+          <img loading="lazy" src="reactionDiffusion/images/bubbles.png" class="u-max-full-width img-hover-zoom"
+            alt="Gray-Scott reaction diffusion preview image">
+        </a>
+      </div>
+    </div>
+    <hr>
+
+
+
+
+    <!-- Physarum -->
+    <div class="row" style="padding-bottom: 2rem;">
+      <h3>Physarum</h3>
+      <em>28 Apr 2021</em>
+    </div>
+    <div class="row">
+      <div class="one-half column">
+        <p> WIP a slime mold simulation using millions of agents
+        </p>
+        <div class="row">
+          <div class="one-half column">
+            <a href="./physarium/" class="button u-full-width">go to website</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="one-half column img_cont">
+        <a href="./physarium/">
+          <img loading="lazy" src="physarum/preview.png" class="u-max-full-width img-hover-zoom"
+            alt="Physarum preview image">
+        </a>
+      </div>
+    </div>
+    <hr>
+
   </div>
 </body>
 <script src="script.js"></script>
