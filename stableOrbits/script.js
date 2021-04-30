@@ -10,6 +10,17 @@ const attractorStrength = .05;
 
 var numBalls = 20;
 
+var maincolor = "#333";
+//set the colorscheme
+if (window.matchMedia) {
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
+    maincolor = e.matches ? "#d3d7cf" : "#333";
+    console.log("theme change detected, setting color to", maincolor);
+  });
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches)
+    maincolor = "#d3d7cf";
+}
+
 function Ball(x, y, dx, dy, r) {
   this.x = x;
   this.y = y;
@@ -32,7 +43,7 @@ function Ball(x, y, dx, dy, r) {
 
 
     //fill the circle
-    ctx.fillStyle = 'hsl(0,' + ~~Math.min(100, this.colliding) + '%,' + ~~Math.min(50, this.colliding / 2) + '%)';
+    ctx.fillStyle = this.colliding ? 'red' : maincolor;
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.r, 0, 2 * Math.PI);
     ctx.fill();
@@ -100,7 +111,7 @@ function adjustPositions(ballA, ballB, depth) {
   var correction = depth * pushStrength;
 
   if (depth < 0.01);
-  ballA.colliding = ballB.colliding = 100
+  ballA.colliding = ballB.colliding = 10
 
   var normal = [ballB.x - ballA.x, ballB.y - ballA.y];
   const mag = Math.sqrt(normal[0] * normal[0] + normal[1] * normal[1]);

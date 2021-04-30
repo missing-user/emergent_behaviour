@@ -2,3 +2,15 @@
   color-scheme: light dark;
   /* both supported */
 }
+
+@media (min-width: 800px) {
+  html {
+    font-size: 90%;
+  }
+}
+
+@media (min-width: 2000px) {
+  html {
+    font-size: 100%;
+  }
+}

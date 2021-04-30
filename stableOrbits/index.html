@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>No Collision</title>
+  <!-- MOBILE––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- CSS––––––––––––––––––––––– -->
+  <link rel="stylesheet" href="../css/normalize.css">
+  <link rel="stylesheet" href="../css/skeleton.css">
+  <link rel="stylesheet" href="../css/darkskelleton.css" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" type="image/png" href="/images/favicon.png">
+</head>
+
+<body>
+  <div class="container" style="margin-top: 1em;">
+    <a href="../">Back to Overview</a>
+    <div class="row">
+      <h1>No Collision</h1>
+      <p>I recently saw <a href="https://www.youtube.com/watch?v=SqpIcsN0FTI">a video</a> demonstrating this weird
+        emergent behaviour on YouTube and tried to reproduce it. It's a collision system, but without the velocity
+        modification you'd usually do. When things collide, their v stays the same, they just get pushed away in space.
+        Over time, all the circles will reach stable orbits, where they don't (or at least rarely) collide! The slider
+        controls the simulation speed.</p>
+      <input type="range" min=".002" max=".5" step="any" style="width: 100%;" oninput="dt = this.value/stepsPerFrame"
+        name="timestep" id="timestep">
+      <canvas class="u-full-width" id="canvas" width="1000" height="1000"></canvas>
+    </div>
+  </div>
+</body>
+<script src="script.js"></script>
+
+</html>

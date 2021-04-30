@@ -10,6 +10,8 @@ if (window.devicePixelRatio > 2) {
   iterations = 5
 }
 
+var disabled = false;
+
 const vertexInfo = twgl.createBufferInfoFromArrays(gl, { a_position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0], });
 function init() {
   //initialize the render shader
@@ -38,9 +40,6 @@ function init() {
 
 
   function animate() {
-    twgl.resizeCanvasToDisplaySize(gl.canvas);
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
     gl.useProgram(simulatorInfo.program);
 
     //update parameters
@@ -67,7 +66,8 @@ function init() {
     twgl.drawBufferInfo(gl, vertexInfo);
     frameId = requestAnimationFrame(animate);
   }
-  frameId = requestAnimationFrame(animate);
+  if (!disabled)
+    frameId = requestAnimationFrame(animate);
 }
 
 function initTexture() {
@@ -76,12 +76,12 @@ function initTexture() {
   for (var y = 0; y < gl.canvas.height; y++) {
     for (var x = 0; x < gl.canvas.width; x++) {
       var i = gl.canvas.width * y + x;
-      const dx = x - Math.ceil(x / (gl.canvas.width / 4)) * (gl.canvas.width / 4);
-      const dy = y - Math.ceil(y / (gl.canvas.height / 4)) * (gl.canvas.height / 4);
-      var dot = dx * dx + dy * dy < 150;
+      const dx = x - Math.ceil(x / 256) * 256;
+      const dy = y - Math.ceil(y / 256) * 256;
+      var dot = dx * dx + dy * dy < 90;
       if (dot) {
-        floatBuffer[4 * i + 0] = 0.6 + Math.random() * 0.04;
-        floatBuffer[4 * i + 1] = 0.23 + Math.random() * 0.04;
+        floatBuffer[4 * i + 0] = 0.7 + Math.random() * 0.1;
+        floatBuffer[4 * i + 1] = 1 - floatBuffer[4 * i + 0];
       }
     }
   }
@@ -99,12 +99,10 @@ function initTexture() {
     simUniforms.k = document.getElementById('kslider').value;
     console.log(JSON.stringify(simUniforms))
  */
-init();
 
 function resetAnim() {
   if (frameId)
     cancelAnimationFrame(frameId);
-  //setPreset(document.getElementById('presets').value);
   init();
 }
 
@@ -124,13 +122,16 @@ function newFramebuffer(gl, texture) {
 }
 
 function enableFloatTextures(gl) {
-  gl.getExtension("OES_texture_float");
-  gl.getExtension("OES_texture_float_linear");
+  if (!gl.getExtension("OES_texture_float")) disableSim();
+  if (!gl.getExtension("OES_texture_float_linear")) disableSim();
 }
 
-var resizeId;
-window.addEventListener('resize', function () {
-  clearTimeout(resizeId);
-  //only reset after resize is finished
-  resizeId = setTimeout(resetAnim, 500);
-});
+function disableSim() {
+  if (window.devicePixelRatio > 2) {
+    document.getElementById('mobileWarning').style.display = '';
+    iterations = 5
+  }
+  disabled = true;
+}
+
+init();
