@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title>Reaction Diffusion Simulation</title>
+  <!-- MOBILE––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- CSS––––––––––––––––––––––– -->
+  <link rel="stylesheet" href="../css/normalize.css">
+  <link rel="stylesheet" href="../css/skeleton.css">
+  <link rel="stylesheet" href="../css/darkskelleton.css" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="icon" type="image/png" href="/images/favicon.png">
+</head>
+
+<body>
+  <div class="container" style="margin-top: 1em;">
+    <a href="../">Back to Overview</a>
+    <div class="row">
+      <div class="column">
+        <h1>Physarum Simulation</h1>
+        <em>Slime molds for pathfinding</em>
+        <hr>
+        <p> Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus doloremque, temporibus sequi fuga magni
+          nobis ipsa sint ab qui quasi neque quos illum aperiam vero cupiditate tenetur rerum magnam minima.
+        </p>
+      </div>
+    </div>
+
+    <div class="row">
+      <p id="mobileWarning" style="display: none;">
+        <b style="color: red;">Due to WebGL issues, the simulation doesn't work well on your device</b>
+      </p>
+      <canvas width="512" height="512" class="u-full-width" id="canvas"></canvas>
+    </div>
+
+    <div class="row">
+      <div class="one-half column">
+        <label>Reset Simulation
+          <button class="u-full-width" onclick="resetAnim()">Reset</button>
+        </label>
+        <label>Diffusion rate A
+          <input id="daslider" type="range" step="any" min="0.05" max=".3" value=".2">
+        </label>
+        <label>Diffusion rate B
+          <input id="dbslider" type="range" step="any" min="0.05" max=".3" value=".1">
+        </label>
+      </div>
+
+      <div class="one-half column">
+        <label>Preset
+          <select id="presets" class="u-full-width" onchange="setPreset(this.value);init();">
+            <option value='{"D_a": 0.2, "D_b": 0.1, "f": 0.0545, "k": 0.062}' selected>Worms</option>
+            <option value='{"D_a": 0.207139, "D_b": 0.104174, "f": 0.05452, "k": 0.06409}'>
+              Highways</option>
+            <option
+              value='{"D_a":"0.23881477680862","D_b":"0.116769283393193","f":"0.042866085171883","k":"0.058780571233111"}'>
+              Dense Network
+            </option>
+            <option
+              value='{"D_a":"0.13866085171883","D_b":"0.116769283393193","f":"0.042866085171883","k":"0.0563287155806396"}'>
+              Oil drop</option>
+          </select>
+        </label>
+        <label>Kill rate
+          <input id="kslider" type="range" step="any" min="0.03" max=".1" value="0.062">
+        </label>
+        <label>Feed rate
+          <input id="fslider" type="range" step="any" min="0.01" max=".1" value="0.045">
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <script id="vs" type="x-shader/x-vertex">
+    attribute vec4 a_position;
+    
+    void main() {
+      gl_Position = a_position;
+    }
+  </script>
+
+  <script type="x-shader/x-fragment" id="renderShader">
+    precision mediump float;
+    
+    uniform sampler2D renderTexture;
+    uniform vec2 resolution;
+      
+    void main() {
+      vec2 pos = gl_FragCoord.xy;
+      gl_FragColor = vec4( texture2D(renderTexture, pos / resolution).rrr*1.7-.5, 1.);
+    }
+  </script>
+
+  <script type="x-shader/x-fragment" id="simShader">
+    precision mediump float;
+  
+    uniform sampler2D renderTexture;
+    uniform vec2 resolution;
+    uniform float dt;
+  
+    uniform float D_a, D_b, f, k;
+    
+    void main() {
+      vec2 pos = gl_FragCoord.xy,
+        up = pos + vec2(0.0, 1.0),
+        right = pos + vec2(1.0, 0.0),
+        down = pos + vec2(0.0, -1.0),
+        left = pos + vec2(-1.0, 0.0);
+    
+      vec2 val = texture2D(renderTexture, pos / resolution).xy; //current cell value
+      vec2 laplace = texture2D(renderTexture, up / resolution).xy
+        + texture2D(renderTexture, right / resolution).xy
+        + texture2D(renderTexture, down / resolution).xy
+        + texture2D(renderTexture, left / resolution).xy
+        - 4.0 * val; // sum of neighbouring cells - 4 * current cell value
+        // laplace, equivalent to sum(delta in each direction)
+      vec2 delta = vec2(D_a*laplace.r - val.r*val.g*val.g + f*(1. - val.r),
+                        D_b*laplace.g + val.r*val.g*val.g - (k + f)*val.g);
+      gl_FragColor = vec4(val + delta * dt, 0., 1.);
+    }
+  </script>
+
+  <script type="text/javascript" src="twgl.min.js"></script>
+  <script type="text/javascript" src="script.js"></script>
+</body>
+<script>var cfla = document.createElement('script'); cfla.defer = true; cfla.src = 'https://static.cloudflareinsights.com/beacon.min.js'; cfla.setAttribute("data-cf-beacon", '{"token": "f9f51233f11041a194c4d5f4511d8282"}'); if (!localStorage.getItem("devmode")) document.body.appendChild(cfla)</script>
+
+</html>

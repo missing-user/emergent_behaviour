@@ -16,6 +16,6 @@ A few screenshots with interesting results I got:
 ![highways preset](reactionDiffusion/images/bubbles.png)
 ![mitosis](reactionDiffusion/images/mitosis.png)
 
-## Physarium
+## Physarum
 WIP a slime mold simulation using millions of agents
-[Live version](https://jurasic-park.de/emergent_behaviour/physarium/)
+[Live version](https://jurasic-park.de/emergent_behaviour/physarum/)
