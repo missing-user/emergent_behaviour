@@ -21,8 +21,23 @@
   <div class="container" style="margin-top: 1em;">
     <a href="/">Back to Home</a>
     <div class="row" style="margin-bottom: 2.5em; margin-top: 1em;">
-      <h1 style="margin-bottom: 0;">Emergence</h1>
-      <h2><i>/ɪˈməːdʒ(ə)ns/</i></h2>
+      <h1 style="margin-bottom: 0;">Emergence
+        <!-- Speaker icon -->
+        <span id="speaker" onclick="document.getElementById('audioElement').play()" style="cursor: pointer;">
+          <svg width="30" height="30" version="1.1" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+            <g transform="translate(-6.69 -19.3)" fill="currentColor">
+              <path d="m6.69 29.4c0.191-0.0637 6.69 0 6.69 0l8.13-8.13v26.2l-8.17-8.17-6.63-0.0451z" />
+              <path transform="matrix(.265 0 0 .265 6.69 19.3)"
+                d="m68.1 29.3v54.9a31.5 31.5 0 0 0 16-27.4 31.5 31.5 0 0 0-16-27.4z" />
+              <path transform="matrix(.265 0 0 .265 6.69 19.3)"
+                d="m68.1 1.84v11.7c18 5.97 31 22.9 31 43-1e-6 20.1-13 37-31 43v11.7c24.3-6.36 42.3-28.5 42.3-54.8s-18-48.4-42.3-54.8z" />
+            </g>
+          </svg>
+        </span>
+      </h1>
+
+      <audio src="images/emergence.mp3" id="audioElement"></audio>
+      <h2><i style="font-family: serif;">/ɪˈməːdʒ(ə)ns/</i></h2>
       <blockquote cite="https://www.oxfordlearnersdictionaries.com/definition/english/emergence">
         <i>noun</i>
         <ol>
@@ -68,8 +83,8 @@
       <div class="one-half column img_cont">
         <a href="./stableOrbits/">
           <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="stableOrbits/preview_dark.png">
-            <img loading="lazy" src="stableOrbits/preview.png" class="u-max-full-width img-hover-zoom"
+            <source media="(prefers-color-scheme: dark)" srcset="images/preview_dark.png">
+            <img loading="lazy" src="images/preview.png" class="u-max-full-width img-hover-zoom"
               alt="stable orbits preview image">
           </picture>
         </a>
@@ -102,7 +117,7 @@
 
       <div class="one-half column img_cont">
         <a href="./reactionDiffusion/">
-          <img loading="lazy" src="reactionDiffusion/images/bubbles.png" class="u-max-full-width img-hover-zoom"
+          <img loading="lazy" src="images/bubbles.png" class="u-max-full-width img-hover-zoom"
             alt="Gray-Scott reaction diffusion preview image">
         </a>
       </div>
@@ -130,7 +145,7 @@
 
       <div class="one-half column img_cont">
         <a href="./physarium/">
-          <img loading="lazy" src="reactionDiffusion/images/mitosis.png" class="u-max-full-width img-hover-zoom"
+          <img loading="lazy" src="images/mitosis.png" class="u-max-full-width img-hover-zoom"
             alt="Physarum preview image">
         </a>
       </div>
@@ -139,7 +154,6 @@
 
   </div>
 </body>
-<script src="script.js"></script>
 <script>var cfla = document.createElement('script'); cfla.defer = true; cfla.src = 'https://static.cloudflareinsights.com/beacon.min.js'; cfla.setAttribute("data-cf-beacon", '{"token": "f9f51233f11041a194c4d5f4511d8282"}'); if (!localStorage.getItem("devmode")) document.body.appendChild(cfla)</script>
 
 </html>
