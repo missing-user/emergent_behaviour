@@ -11,10 +11,10 @@ A basic collision system, but without conservation of momentum. When balls colli
 Here's a reaction diffusion simulation utilizing the Gray-Scott model:
 [Live version](https://jurasic-park.de/emergent_behaviour/reactionDiffusion/)
 A few screenshots with interesting results I got:
-![worms preset](reactionDiffusion/images/worms.png)
-![highways preset](reactionDiffusion/images/highways.png)
-![highways preset](reactionDiffusion/images/bubbles.png)
-![mitosis](reactionDiffusion/images/mitosis.png)
+![worms preset](shared/images/worms.png)
+![highways preset](shared/images/highways.png)
+![highways preset](shared/images/bubbles.png)
+![mitosis](shared/images/mitosis.png)
 
 ## Physarum
 WIP a slime mold simulation using millions of agents

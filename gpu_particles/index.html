@@ -20,57 +20,22 @@
     <a href="../">Back to Overview</a>
     <div class="row">
       <div class="column">
-        <h1>Physarum Simulation</h1>
-        <em>Slime molds for pathfinding</em>
-        <hr>
-        <p> Lorem ipsum dolor sit amet consectetur, adipisicing elit. Natus doloremque, temporibus sequi fuga magni
-          nobis ipsa sint ab qui quasi neque quos illum aperiam vero cupiditate tenetur rerum magnam minima.
+        <h1>GPU Particles</h1>
+        <p>Particle simulations - this time in parallel! Uses textures to store and update positions and velocity
+          information. This way the simulations can be run on the GPU as a simple pixel shader. Since the GPU can't
+          write to the same texture being read, two textures have to be used and swapped each frame.
+          <br>
+          <br>
+          I'll hopefully be able to reuse this as a template for upcoming projects.
         </p>
       </div>
     </div>
 
     <div class="row">
       <p id="mobileWarning" style="display: none;">
-        <b style="color: red;">Due to WebGL issues, the simulation doesn't work well on your device</b>
+        <b style="color: red;">Due to WebGL issues, the simulation might not work well on your device</b>
       </p>
       <canvas width="512" height="512" class="u-full-width" id="canvas"></canvas>
-    </div>
-
-    <div class="row">
-      <div class="one-half column">
-        <label>Reset Simulation
-          <button class="u-full-width" onclick="resetAnim()">Reset</button>
-        </label>
-        <label>Diffusion rate A
-          <input id="daslider" type="range" step="any" min="0.05" max=".3" value=".2">
-        </label>
-        <label>Diffusion rate B
-          <input id="dbslider" type="range" step="any" min="0.05" max=".3" value=".1">
-        </label>
-      </div>
-
-      <div class="one-half column">
-        <label>Preset
-          <select id="presets" class="u-full-width" onchange="setPreset(this.value);init();">
-            <option value='{"D_a": 0.2, "D_b": 0.1, "f": 0.0545, "k": 0.062}' selected>Worms</option>
-            <option value='{"D_a": 0.207139, "D_b": 0.104174, "f": 0.05452, "k": 0.06409}'>
-              Highways</option>
-            <option
-              value='{"D_a":"0.23881477680862","D_b":"0.116769283393193","f":"0.042866085171883","k":"0.058780571233111"}'>
-              Dense Network
-            </option>
-            <option
-              value='{"D_a":"0.13866085171883","D_b":"0.116769283393193","f":"0.042866085171883","k":"0.0563287155806396"}'>
-              Oil drop</option>
-          </select>
-        </label>
-        <label>Kill rate
-          <input id="kslider" type="range" step="any" min="0.03" max=".1" value="0.062">
-        </label>
-        <label>Feed rate
-          <input id="fslider" type="range" step="any" min="0.01" max=".1" value="0.045">
-        </label>
-      </div>
     </div>
   </div>
 
@@ -126,7 +91,7 @@
     }
   </script>
 
-  <script type="text/javascript" src="../shared/twgl.min.js"></script>
+  <script type="text/javascript" src="/shared/twgl.min.js"></script>
   <script type="text/javascript" src="script.js"></script>
 </body>
 <script>var cfla = document.createElement('script'); cfla.defer = true; cfla.src = 'https://static.cloudflareinsights.com/beacon.min.js'; cfla.setAttribute("data-cf-beacon", '{"token": "f9f51233f11041a194c4d5f4511d8282"}'); if (!localStorage.getItem("devmode")) document.body.appendChild(cfla)</script>
