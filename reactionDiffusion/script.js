@@ -4,13 +4,11 @@ const gl = canvas.getContext("webgl");
 var frameId;
 enableFloatTextures(gl);
 
-var iterations = 15;
+var disabled = false;
+var iterations = 10;
 if (window.devicePixelRatio > 2) {
-  document.getElementById('mobileWarning').style.display = '';
   iterations = 5
 }
-
-var disabled = false;
 
 const vertexInfo = twgl.createBufferInfoFromArrays(gl, { a_position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0], });
 function init() {
@@ -127,10 +125,7 @@ function enableFloatTextures(gl) {
 }
 
 function disableSim() {
-  if (window.devicePixelRatio > 2) {
-    document.getElementById('mobileWarning').style.display = '';
-    iterations = 5
-  }
+  document.getElementById('webglWarning').style.display = '';
   disabled = true;
 }
 

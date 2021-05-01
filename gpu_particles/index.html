@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Reaction Diffusion Simulation</title>
+  <title>GPU Particles</title>
   <!-- MOBILE––––––––––––––––––––––– -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;600&display=swap" rel="stylesheet">
@@ -32,10 +32,10 @@
     </div>
 
     <div class="row">
-      <p id="mobileWarning" style="display: none;">
+      <p id="webglWarning" style="display: none;">
         <b style="color: red;">Due to WebGL issues, the simulation might not work well on your device</b>
       </p>
-      <canvas width="512" height="512" class="u-full-width" id="canvas"></canvas>
+      <canvas width="1024" height="1024" class="u-full-width" id="canvas"></canvas>
     </div>
   </div>
 
@@ -48,16 +48,34 @@
     }
   </script>
 
+  <!-- Point Sprite Vertex Shader -->
+  <script id="vs_points" type="x-shader/x-vertex">
+    precision mediump float;
+
+    attribute vec2 a_Index; // UV index of the sprite
+    uniform vec2 u_simResolution;
+    uniform vec2 u_resolution; // width/height of screen
+    uniform sampler2D u_simTexture;
+
+    void main() {
+      vec4 simData = texture2D(u_simTexture, 2.*a_Index/u_simResolution-1.);
+      vec2 pos = simData.xy;
+      vec2 vel = simData.zw;
+      gl_Position = vec4(pos, 0.0, 1.0);
+      gl_PointSize = 1.0;
+    }
+  </script>
+
   <!-- Final Render Shader Shader -->
   <script type="x-shader/x-fragment" id="renderShader">
     precision mediump float;
     
-    uniform sampler2D renderTexture;
-    uniform vec2 resolution;
+    uniform vec2 u_simResolution;
+    uniform vec2 u_resolution;
+    uniform sampler2D u_simTexture;
       
     void main() {
-      vec2 pos = gl_FragCoord.xy;
-      gl_FragColor = vec4( texture2D(renderTexture, pos / resolution).rrr*1.7-.5, 1.);
+      gl_FragColor = vec4(1.);
     }
   </script>
 
@@ -65,33 +83,35 @@
   <script type="x-shader/x-fragment" id="simShader">
     precision mediump float;
   
-    uniform sampler2D renderTexture;
-    uniform vec2 resolution;
-    uniform float dt;
+    uniform vec2 u_simResolution;
+    uniform vec2 u_resolution;
+    uniform sampler2D u_pheromoneTexture;
+    uniform sampler2D u_simTexture;
+    uniform float u_dt;
   
     uniform float D_a, D_b, f, k;
     
     void main() {
-      vec2 pos = gl_FragCoord.xy,
-        up = pos + vec2(0.0, 1.0),
-        right = pos + vec2(1.0, 0.0),
-        down = pos + vec2(0.0, -1.0),
-        left = pos + vec2(-1.0, 0.0);
-    
-      vec2 val = texture2D(renderTexture, pos / resolution).xy; //current cell value
-      vec2 laplace = texture2D(renderTexture, up / resolution).xy
-        + texture2D(renderTexture, right / resolution).xy
-        + texture2D(renderTexture, down / resolution).xy
-        + texture2D(renderTexture, left / resolution).xy
-        - 4.0 * val; // sum of neighbouring cells - 4 * current cell value
-        // laplace, equivalent to sum(delta in each direction)
-      vec2 delta = vec2(D_a*laplace.r - val.r*val.g*val.g + f*(1. - val.r),
-                        D_b*laplace.g + val.r*val.g*val.g - (k + f)*val.g);
-      gl_FragColor = vec4(val + delta * dt, 0., 1.);
+      vec4 simData = texture2D(u_simTexture, gl_FragCoord.xy/u_simResolution);
+      vec2 pos = simData.xy;
+      vec2 vel = simData.zw;
+      
+      vec2 newVel = vel;
+
+      if (pos.x>1. || pos.x<-1.) {
+        vel.x = -vel.x;
+        pos.x += vel.x * u_dt;
+      }
+      if (pos.y>1. || pos.y<-1.) {
+        vel.y = -vel.y;
+        pos.y += vel.y * u_dt;
+      }
+
+      gl_FragColor = vec4(pos + vel * u_dt, vel);
     }
   </script>
 
-  <script type="text/javascript" src="/shared/twgl.min.js"></script>
+  <script type="text/javascript" src="../shared/twgl.min.js"></script>
   <script type="text/javascript" src="script.js"></script>
 </body>
 <script>var cfla = document.createElement('script'); cfla.defer = true; cfla.src = 'https://static.cloudflareinsights.com/beacon.min.js'; cfla.setAttribute("data-cf-beacon", '{"token": "f9f51233f11041a194c4d5f4511d8282"}'); if (!localStorage.getItem("devmode")) document.body.appendChild(cfla)</script>
