@@ -38,7 +38,7 @@ function init() {
   });
   const simulatorInfo = twgl.createProgramInfo(gl, ['vs', 'simShader']);
   const simUniforms = {
-    u_dt: .002,
+    u_dt: .02,
     u_resolution: [gl.canvas.width, gl.canvas.height],
     u_simResolution: [simSize, simSize],
     u_searchDistance: 5,
@@ -65,10 +65,32 @@ function init() {
 
 
   function animate() {
+
+    //update simulation
+    gl.useProgram(simulatorInfo.program);
+    simUniforms.u_time = (Date.now() - startTime) / 1000;
+    twgl.setUniforms(simulatorInfo, simUniforms);
+    twgl.setBuffersAndAttributes(gl, simulatorInfo, simVertexInfo);
+    for (var i = 0; i < iterations; i++) {
+      //frame buffer swap
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, t1);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, pt1);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb2);
+      twgl.drawBufferInfo(gl, simVertexInfo);
+
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, t2);
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, pt1);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fb1);
+      twgl.drawBufferInfo(gl, simVertexInfo);
+    }
+
+
     //update pheromone texture
     gl.useProgram(pheromoneInfo.program);
-    pheroUniforms.u_pheroTexture = pt1;
-    pheroUniforms.renderTexture = renderTexture;
     twgl.setUniforms(pheromoneInfo, pheroUniforms);
     twgl.setBuffersAndAttributes(gl, pheromoneInfo, simVertexInfo);
     for (var i = 0; i < iterations; i++) {
@@ -89,37 +111,15 @@ function init() {
       twgl.drawBufferInfo(gl, simVertexInfo);
     }
 
-    //update simulation
-    gl.useProgram(simulatorInfo.program);
-    simUniforms.u_time = (Date.now() - startTime) / 1000;
-    twgl.setUniforms(simulatorInfo, simUniforms);
-    twgl.setBuffersAndAttributes(gl, simulatorInfo, simVertexInfo);
-    for (var i = 0; i < iterations; i++) {
-      //frame buffer swap
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, pt1);
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, t1);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, fb2);
-      twgl.drawBufferInfo(gl, simVertexInfo);
-
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, pt1);
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, t2);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, fb1);
-      twgl.drawBufferInfo(gl, simVertexInfo);
-    }
-
     // render the current particles
     gl.useProgram(rendererInfo.program);
     twgl.setBuffersAndAttributes(gl, rendererInfo, renderVertexInfo);
     twgl.setUniforms(rendererInfo, renderUniforms);
+    twgl.bindFramebufferInfo(gl);
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, t1);
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, pt1);
-    twgl.bindFramebufferInfo(gl);
 
     twgl.drawBufferInfo(gl, renderVertexInfo, debug ? undefined : gl.POINTS);
     frameId = requestAnimationFrame(animate);

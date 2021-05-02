@@ -78,10 +78,11 @@
     uniform sampler2D u_pheroTexture;
       
     void main() {
-      vec4 simData = texture2D(u_pheroTexture, gl_FragCoord.xy/u_resolution);
+      vec4 simData = texture2D(u_simTexture, gl_FragCoord.xy/u_resolution);
+      vec4 simData2 = texture2D(u_pheroTexture, gl_FragCoord.xy/u_resolution);
       
      // gl_FragColor = vec4(1.,0.,0.,1.);
-     gl_FragColor = vec4(simData.rgb,1.);
+     gl_FragColor = vec4(simData.r, simData2.rr,1.);
     }
   </script>
 
@@ -95,9 +96,10 @@
     uniform sampler2D u_pheroTexture;
       
     void main() {
+      vec4 simData = texture2D(u_simTexture, gl_FragCoord.xy/u_resolution);
       vec4 phero = texture2D(u_pheroTexture, gl_FragCoord.xy/u_resolution);
       
-      gl_FragColor = phero;
+      gl_FragColor = vec4(1.,0.,0.,1.);
     }
   </script>
 
