@@ -35,7 +35,7 @@
       <p id="webglWarning" style="display: none;">
         <b style="color: red;">Due to WebGL issues, the simulation might not work well on your device</b>
       </p>
-      <canvas width="1024" height="1024" class="u-full-width" id="canvas"></canvas>
+      <canvas width="1024" height="1024" id="canvas"></canvas>
     </div>
   </div>
 
@@ -60,9 +60,8 @@
     void main() {
       vec4 simData = texture2D(u_simTexture, 2.*a_Index/u_simResolution-1.);
       vec2 pos = simData.xy;
-      vec2 vel = simData.zw;
       gl_Position = vec4(pos, 0.0, 1.0);
-      gl_PointSize = 1.0;
+      gl_PointSize =1.0;
     }
   </script>
 
@@ -75,6 +74,8 @@
     uniform sampler2D u_simTexture;
       
     void main() {
+      vec4 simData = texture2D(u_simTexture, gl_FragCoord.xy/u_resolution);
+      
       gl_FragColor = vec4(1.);
     }
   </script>
@@ -82,10 +83,16 @@
   <!-- update positions and velocities Shader -->
   <script type="x-shader/x-fragment" id="simShader">
     precision mediump float;
-  
+
+    #define M_PI 3.141592653589793
+
+    uniform float u_speed;
+    uniform float u_time;
+    uniform float u_searchAngle;
+    uniform float u_searchDistance;
+    uniform float u_rotationRate;
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
-    uniform sampler2D u_pheromoneTexture;
     uniform sampler2D u_simTexture;
     uniform float u_dt;
   
@@ -94,20 +101,21 @@
     void main() {
       vec4 simData = texture2D(u_simTexture, gl_FragCoord.xy/u_simResolution);
       vec2 pos = simData.xy;
-      vec2 vel = simData.zw;
-      
-      vec2 newVel = vel;
-
-      if (pos.x>1. || pos.x<-1.) {
-        vel.x = -vel.x;
-        pos.x += vel.x * u_dt;
+      float dir = simData.z; 
+      //if (pos.x>1. || pos.x<-1. || pos.y>1. || pos.y<-1.) {
+        if (pos.x*pos.x+pos.y*pos.y>1.) {
+        float centerDir = atan(-pos.y, -pos.x);
+        float delta = mod(centerDir - dir + 3.*M_PI, 2.*M_PI) - M_PI;
+        if(delta > 0.){
+          dir += u_rotationRate *u_dt;
+        }else{
+          dir -= u_rotationRate *u_dt;
+        }
       }
-      if (pos.y>1. || pos.y<-1.) {
-        vel.y = -vel.y;
-        pos.y += vel.y * u_dt;
-      }
+      // dir = mod(dir, 2.* M_PI);
+      vec2 vel = vec2(cos(dir), sin(dir)) * u_speed;
 
-      gl_FragColor = vec4(pos + vel * u_dt, vel);
+      gl_FragColor = vec4(pos + vel*u_dt, dir, simData.w);
     }
   </script>
 
