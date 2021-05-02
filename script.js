@@ -18,27 +18,18 @@ const debug = false;
 
 
 function init() {
-  //initialize the render shader
-  /*const rendererInfo = twgl.createProgramInfo(gl, ['vs', 'renderShader']);
-  const renderUniforms = {
-    u_resolution: [gl.canvas.width, gl.canvas.height],
-    u_simResolution: [simSize, simSize],
-    u_simTexture: initSimTexture(),
-  }*/
-  var simTexture = initSimTexture();
   //initialize the particle render shader
   const rendererInfo = twgl.createProgramInfo(gl, [debug ? 'vs' : 'vs_points', 'renderShader']);
   const renderUniforms = {
     u_resolution: [gl.canvas.width, gl.canvas.height],
     u_simResolution: [simSize, simSize],
-    u_simTexture: simTexture,
   }
   const renderVertexInfo = twgl.createBufferInfoFromArrays(gl, {
     a_Index: { numComponents: 2, data: initIndices(), },
   });
 
-  //initialize the buffer textures
-  var t1 = simTexture, t2 = initTexture();
+  //initialize the simulation buffer textures
+  var t1 = initSimTexture(), t2 = initTexture();
   const fb1 = newFramebuffer(gl, t1), fb2 = newFramebuffer(gl, t2);
 
   //initialize the simulation shader
@@ -51,18 +42,55 @@ function init() {
     u_resolution: [gl.canvas.width, gl.canvas.height],
     u_simResolution: [simSize, simSize],
     u_simTexture: t1,
+    u_searchDistance: 5,
     u_speed: .2,
     u_rotationRate: 2,
+    u_searchAngle: .2,
     u_time: 0,
   };
   gl.useProgram(simulatorInfo.program);
   twgl.setUniforms(simulatorInfo, simUniforms);
   twgl.setBuffersAndAttributes(gl, simulatorInfo, simVertexInfo);
   var startTime = Date.now();
+  /*
+  
+    //pheromone shader
+    var pt1 = initSimTexture(),
+      pt2 = initTexture(),
+      renderTexture = initTexture();
+    const pheromoneInfo = twgl.createProgramInfo(gl, ['vs', 'pheroShader']);
+    const pheroUniforms = {
+      u_resolution: [gl.canvas.width, gl.canvas.height],
+      u_simResolution: [simSize, simSize],
+    }
+    const pfb1 = newFramebuffer(gl, pt1),
+      pfb2 = newFramebuffer(gl, pt2),
+      renderBuffer = newFramebuffer(gl, renderTexture);
+  
+  */
 
   function animate() {
+    /*
+    //update pheromone texture
+    gl.useProgram(pheromoneInfo.program);
+    pheroUniforms.u_pheroTexture = pt1;
+    pheroUniforms.renderTexture = renderTexture;
+    twgl.setUniforms(pheromoneInfo, pheroUniforms);
+    twgl.setBuffersAndAttributes(gl, pheromoneInfo, simVertexInfo);
+    for (var i = 0; i < iterations; i++) {
+      //frame buffer swap
+      gl.bindTexture(gl.TEXTURE_2D, pt1);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, pfb2);
+      twgl.drawBufferInfo(gl, simVertexInfo);
+
+      gl.bindTexture(gl.TEXTURE_2D, pt2);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, pfb1);
+      twgl.drawBufferInfo(gl, simVertexInfo);
+    }*/
+
+    //update simulation
     gl.useProgram(simulatorInfo.program);
-    // simUniforms.u_simTexture = simTexture;
+    simUniforms.u_pheroTexture = initTexture();
     simUniforms.u_simTexture = t1;
     simUniforms.u_time = (Date.now() - startTime) / 1000;
     twgl.setUniforms(simulatorInfo, simUniforms);
@@ -78,9 +106,8 @@ function init() {
       twgl.drawBufferInfo(gl, simVertexInfo);
     }
 
-    //update the sim Texture in renderer
+    // render the current particles
     gl.useProgram(rendererInfo.program);
-    //gl.bindTexture(gl.TEXTURE_2D, simTexture);
     twgl.setBuffersAndAttributes(gl, rendererInfo, renderVertexInfo);
     twgl.setUniforms(rendererInfo, renderUniforms);
     twgl.bindFramebufferInfo(gl);
