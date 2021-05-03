@@ -78,7 +78,7 @@
       vec4 simData = texture2D(u_simTexture, 2.*a_Index/u_simResolution-1.);
       vec2 pos = simData.xy;
       gl_Position = vec4(pos, 0.0, 1.0);
-      gl_PointSize = 5.0;
+      gl_PointSize =1.0;
     }
   </script>
 
@@ -89,29 +89,32 @@
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
     uniform sampler2D u_simTexture;
+    uniform sampler2D u_pheroTexture;
       
     void main() {
-      vec4 simData = texture2D(u_simTexture, gl_FragCoord.xy/u_resolution);
+      vec4 simData = texture2D(u_pheroTexture, gl_FragCoord.xy/u_resolution);
   
-     // gl_FragColor = vec4(1.,0.,0.,1.);
      gl_FragColor = vec4(simData.rgb, 1.);
+     //gl_FragColor = vec4(1.,0.,0.,1.);
     }
   </script>
 
-  <!-- Pheromone diffusion Shader -->
-  <script type="x-shader/x-fragment" id="pheroShader">
+  <!-- inital particle attributes Shader -->
+  <script type="x-shader/x-fragment" id="initShader">
     precision mediump float;
+    #define M_PI 3.141592653589793
     
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
-    uniform sampler2D u_simTexture;
-    uniform sampler2D u_pointsTexture;
       
+    vec2 n2rand(vec2 uv) {
+      return vec2(fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453),
+        fract(sin(dot(uv.xy * 1.61803, vec2(12.9898, 78.233))) * 43758.5453));
+    }
+
     void main() {
-      vec4 simData = texture2D(u_simTexture, gl_FragCoord.xy/u_resolution);
-      vec4 phero = texture2D(u_pointsTexture, gl_FragCoord.xy/u_resolution);
-      
-      gl_FragColor = vec4(simData.rgb,(phero.a+simData.a)/2.);
+      vec2 uv =2.* gl_FragCoord.xy/u_resolution -1.;
+      gl_FragColor = vec4(uv, uv.x*2.*M_PI, 1.);
     }
   </script>
 
@@ -129,13 +132,14 @@
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
     uniform sampler2D u_simTexture;
+    uniform sampler2D u_pheroTexture;
     uniform float u_dt;
   
     uniform float D_a, D_b, f, k;
 
     float getPheroAtAngle(float a, float dir){
       vec2 offset = u_searchDistance * vec2(cos(dir+a), sin(dir+a));
-      return texture2D(u_simTexture, (offset+gl_FragCoord.xy)/u_resolution).a;
+      return texture2D(u_pheroTexture, (offset+gl_FragCoord.xy)/u_resolution).a;
     }
     
     void main() {
@@ -157,15 +161,14 @@
           dir -= u_rotationRate *u_dt;
         }
       }else{
-        /*//main code
+        //main code
         if(pheroL < pheroR-.05){
           dir -= u_rotationRate *u_dt;
         } 
         if(pheroL-.05 > pheroR){
           dir += u_rotationRate *u_dt;
-        }*/
+        }
       }
-      // dir = mod(dir, 2.* M_PI);
       vec2 vel = vec2(cos(dir), sin(dir)) * u_speed;
 
       gl_FragColor = vec4(pos + vel*u_dt, dir, simData.w);

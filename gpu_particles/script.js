@@ -138,13 +138,6 @@ function resetAnim() {
   init();
 }
 
-function newFramebuffer(gl, texture) {
-  var fb = gl.createFramebuffer();
-  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-  return fb;
-}
-
 function enableFloatTextures(gl) {
   if (!gl.getExtension("OES_texture_float")) disableSim();
   if (!gl.getExtension("OES_texture_float_linear")) disableSim();
