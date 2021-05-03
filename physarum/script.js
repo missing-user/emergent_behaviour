@@ -14,12 +14,11 @@ if (window.devicePixelRatio > 2) {
 // Simulation constants
 const simSize = 1024; // width & height of the simulation textures
 const pCount = simSize * simSize;
-const debug = false;
 
 
 function init() {
   //initialize the particle render shader
-  const rendererInfo = twgl.createProgramInfo(gl, [debug ? 'vs' : 'vs_points', 'renderShader']);
+  const rendererInfo = twgl.createProgramInfo(gl, ['vs_points', 'renderShader']);
   const renderUniforms = {
     u_resolution: [gl.canvas.width, gl.canvas.height],
     u_simResolution: [simSize, simSize],
@@ -27,6 +26,9 @@ function init() {
   const renderVertexInfo = twgl.createBufferInfoFromArrays(gl, {
     a_Index: { numComponents: 2, data: initIndices(), },
   });
+
+  //initialize the texture render shader
+  const textureRendererInfo = twgl.createProgramInfo(gl, ['vs', 'textureRenderShader']);
 
   //initialize the simulation buffer textures
   var t1 = initSimTexture(), t2 = initTexture();
@@ -51,7 +53,7 @@ function init() {
 
 
   //pheromone shader
-  var pt1 = initTexture(),
+  var pt1 = initSimTexture(),
     pt2 = initTexture(),
     renderTexture = initTexture();
   const pheromoneInfo = twgl.createProgramInfo(gl, ['vs', 'pheroShader']);
@@ -73,55 +75,47 @@ function init() {
     twgl.setBuffersAndAttributes(gl, simulatorInfo, simVertexInfo);
     for (var i = 0; i < iterations; i++) {
       //frame buffer swap
-      gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, t1);
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, pt1);
       gl.bindFramebuffer(gl.FRAMEBUFFER, fb2);
       twgl.drawBufferInfo(gl, simVertexInfo);
 
-      gl.activeTexture(gl.TEXTURE0);
+
       gl.bindTexture(gl.TEXTURE_2D, t2);
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, pt1);
       gl.bindFramebuffer(gl.FRAMEBUFFER, fb1);
       twgl.drawBufferInfo(gl, simVertexInfo);
     }
 
 
     //update pheromone texture
-    gl.useProgram(pheromoneInfo.program);
+    /*gl.useProgram(pheromoneInfo.program);
     twgl.setUniforms(pheromoneInfo, pheroUniforms);
     twgl.setBuffersAndAttributes(gl, pheromoneInfo, simVertexInfo);
     for (var i = 0; i < iterations; i++) {
       //frame buffer swap
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, t1);
-      gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, pt1);
       gl.bindFramebuffer(gl.FRAMEBUFFER, pfb2);
       twgl.drawBufferInfo(gl, simVertexInfo);
 
 
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, t1);
-      gl.activeTexture(gl.TEXTURE1);
       gl.bindTexture(gl.TEXTURE_2D, pt2);
       gl.bindFramebuffer(gl.FRAMEBUFFER, pfb1);
       twgl.drawBufferInfo(gl, simVertexInfo);
-    }
+    }*/
 
     // render the current particles
     gl.useProgram(rendererInfo.program);
     twgl.setBuffersAndAttributes(gl, rendererInfo, renderVertexInfo);
     twgl.setUniforms(rendererInfo, renderUniforms);
-    twgl.bindFramebufferInfo(gl);
-    gl.activeTexture(gl.TEXTURE0);
-    gl.bindTexture(gl.TEXTURE_2D, t1);
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, pt1);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, renderBuffer);
+    twgl.drawBufferInfo(gl, renderVertexInfo, gl.POINTS);
 
-    twgl.drawBufferInfo(gl, renderVertexInfo, debug ? undefined : gl.POINTS);
+
+    gl.useProgram(textureRendererInfo.program);
+    twgl.setBuffersAndAttributes(gl, textureRendererInfo, simVertexInfo);
+    twgl.setUniforms(textureRendererInfo, renderUniforms);
+    gl.bindTexture(gl.TEXTURE_2D, renderTexture);
+    twgl.bindFramebufferInfo(gl);
+    twgl.drawBufferInfo(gl, simVertexInfo);
     frameId = requestAnimationFrame(animate);
   }
   if (!disabled)

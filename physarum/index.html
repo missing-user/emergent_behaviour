@@ -50,6 +50,20 @@
     }
   </script>
 
+
+  <!-- Texture Render Shader -->
+  <script type="x-shader/x-fragment" id="textureRenderShader">
+    precision mediump float;
+    
+    uniform vec2 u_simResolution;
+    uniform vec2 u_resolution;
+    uniform sampler2D u_simTexture;
+      
+    void main() {
+     gl_FragColor = texture2D(u_simTexture, gl_FragCoord.xy/u_resolution);
+    }
+  </script>
+
   <!-- Point Sprite Vertex Shader -->
   <script id="vs_points" type="x-shader/x-vertex">
     precision mediump float;
@@ -64,7 +78,7 @@
       vec4 simData = texture2D(u_simTexture, 2.*a_Index/u_simResolution-1.);
       vec2 pos = simData.xy;
       gl_Position = vec4(pos, 0.0, 1.0);
-      gl_PointSize =15.0;
+      gl_PointSize = 5.0;
     }
   </script>
 
@@ -75,14 +89,12 @@
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
     uniform sampler2D u_simTexture;
-    uniform sampler2D u_pheroTexture;
       
     void main() {
       vec4 simData = texture2D(u_simTexture, gl_FragCoord.xy/u_resolution);
-      vec4 simData2 = texture2D(u_pheroTexture, gl_FragCoord.xy/u_resolution);
-      
+  
      // gl_FragColor = vec4(1.,0.,0.,1.);
-     gl_FragColor = vec4(simData.r, simData2.rr,1.);
+     gl_FragColor = vec4(simData.rgb, 1.);
     }
   </script>
 
@@ -93,13 +105,13 @@
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
     uniform sampler2D u_simTexture;
-    uniform sampler2D u_pheroTexture;
+    uniform sampler2D u_pointsTexture;
       
     void main() {
       vec4 simData = texture2D(u_simTexture, gl_FragCoord.xy/u_resolution);
-      vec4 phero = texture2D(u_pheroTexture, gl_FragCoord.xy/u_resolution);
+      vec4 phero = texture2D(u_pointsTexture, gl_FragCoord.xy/u_resolution);
       
-      gl_FragColor = vec4(1.,0.,0.,1.);
+      gl_FragColor = vec4(simData.rgb,(phero.a+simData.a)/2.);
     }
   </script>
 
@@ -117,14 +129,13 @@
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
     uniform sampler2D u_simTexture;
-    uniform sampler2D u_pheroTexture;
     uniform float u_dt;
   
     uniform float D_a, D_b, f, k;
 
-    vec4 getPheroAtAngle(float a, float dir){
+    float getPheroAtAngle(float a, float dir){
       vec2 offset = u_searchDistance * vec2(cos(dir+a), sin(dir+a));
-      return texture2D(u_pheroTexture, (offset+gl_FragCoord.xy)/u_resolution);
+      return texture2D(u_simTexture, (offset+gl_FragCoord.xy)/u_resolution).a;
     }
     
     void main() {
@@ -132,9 +143,9 @@
       vec2 pos = simData.xy;
       float dir = simData.z; 
 
-      vec4 pheroL = getPheroAtAngle(-u_searchAngle,dir);
-      vec4 pheroC = getPheroAtAngle(0.,dir);
-      vec4 pheroR = getPheroAtAngle(u_searchAngle,dir);
+      float pheroL = getPheroAtAngle(-u_searchAngle,dir);
+      float pheroC = getPheroAtAngle(0.,dir);
+      float pheroR = getPheroAtAngle(u_searchAngle,dir);
       
     //if (pos.x>1. || pos.x<-1. || pos.y>1. || pos.y<-1.) {
       if (pos.x*pos.x+pos.y*pos.y>1.) {
@@ -146,13 +157,13 @@
           dir -= u_rotationRate *u_dt;
         }
       }else{
-        //main code
-        if(pheroL.x < pheroR.x-.05){
+        /*//main code
+        if(pheroL < pheroR-.05){
           dir -= u_rotationRate *u_dt;
         } 
-        if(pheroL.x-.05 > pheroR.x){
+        if(pheroL-.05 > pheroR){
           dir += u_rotationRate *u_dt;
-        }
+        }*/
       }
       // dir = mod(dir, 2.* M_PI);
       vec2 vel = vec2(cos(dir), sin(dir)) * u_speed;
