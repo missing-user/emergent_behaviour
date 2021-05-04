@@ -9,11 +9,15 @@ const minimalVertexInfo = twgl.createBufferInfoFromArrays(gl, {
   a_position: frameVertexCoords,
 });
 
-var disabled = false;
+var disabled = false, pause;
 
 // Simulation constants
-const simSize = 1024; // width & height of the simulation textures
-const pCount = simSize * simSize;
+var simSize = 1024; // width & height of the simulation textures
+if (window.devicePixelRatio > 2)
+  simSize = 512;
+var pCount = simSize * simSize;
+canvas.width = simSize;
+canvas.height = simSize;
 
 function getRangeVal(id) {
   return document.getElementById(id).value;
@@ -60,70 +64,71 @@ function init() {
   twgl.drawBufferInfo(gl, minimalVertexInfo);
 
   function animate() {
-    //diffuse pheromones
-    gl.useProgram(diffInfo.program);
-    twgl.setBuffersAndAttributes(gl, diffInfo, minimalVertexInfo);
-    twgl.setUniforms(diffInfo, {
-      u_resolution: [gl.canvas.width, gl.canvas.height],
-      u_simResolution: [simSize, simSize],
-      u_pheroTexture: pfb1.attachments[0],
-      u_evaporationRate: getRangeVal('evaporationrate'),
-    });
-    twgl.bindFramebufferInfo(gl, pfb2);
-    twgl.drawBufferInfo(gl, minimalVertexInfo);
+    if (!pause) {
+      //diffuse pheromones
+      gl.useProgram(diffInfo.program);
+      twgl.setBuffersAndAttributes(gl, diffInfo, minimalVertexInfo);
+      twgl.setUniforms(diffInfo, {
+        u_resolution: [gl.canvas.width, gl.canvas.height],
+        u_simResolution: [simSize, simSize],
+        u_pheroTexture: pfb1.attachments[0],
+        u_evaporationRate: getRangeVal('evaporationrate'),
+      });
+      twgl.bindFramebufferInfo(gl, pfb2);
+      twgl.drawBufferInfo(gl, minimalVertexInfo);
 
-    //update simulation
-    gl.useProgram(simulatorInfo.program);
-    twgl.setBuffersAndAttributes(gl, simulatorInfo, minimalVertexInfo);
+      //update simulation
+      gl.useProgram(simulatorInfo.program);
+      twgl.setBuffersAndAttributes(gl, simulatorInfo, minimalVertexInfo);
 
-    twgl.setUniforms(simulatorInfo, {
-      u_dt: .05,
-      u_resolution: [gl.canvas.width, gl.canvas.height],
-      u_simResolution: [simSize, simSize],
-      u_searchDistance: getRangeVal('searchdistance'),
-      u_speed: getRangeVal('movementspeed'),
-      u_rotationRate: getRangeVal('rotationrate'),
-      u_searchAngle: getRangeVal('searchangle'),
-      u_pheroTexture: pfb2.attachments[0],
-      u_simTexture: fb1.attachments[0],
-      u_time: (Date.now() - startTime) / 1000,
-    });
-    twgl.bindFramebufferInfo(gl, fb2);
-    twgl.drawBufferInfo(gl, minimalVertexInfo);
+      twgl.setUniforms(simulatorInfo, {
+        u_dt: .05,
+        u_resolution: [gl.canvas.width, gl.canvas.height],
+        u_simResolution: [simSize, simSize],
+        u_searchDistance: getRangeVal('searchdistance'),
+        u_speed: getRangeVal('movementspeed'),
+        u_rotationRate: getRangeVal('rotationrate'),
+        u_searchAngle: getRangeVal('searchangle'),
+        u_pheroTexture: pfb2.attachments[0],
+        u_simTexture: fb1.attachments[0],
+        u_time: (Date.now() - startTime) / 1000,
+      });
+      twgl.bindFramebufferInfo(gl, fb2);
+      twgl.drawBufferInfo(gl, minimalVertexInfo);
 
-    // render the current particles
-    gl.useProgram(rendererInfo.program);
-    twgl.setBuffersAndAttributes(gl, rendererInfo, pointsVertexInfo);
-    twgl.setUniforms(rendererInfo, {
-      u_resolution: [gl.canvas.width, gl.canvas.height],
-      u_simResolution: [simSize, simSize],
-      u_simTexture: fb1.attachments[0],
-      u_time: (Date.now() - startTime) / 500,
-    });
-    twgl.bindFramebufferInfo(gl, pfb2);
-    twgl.drawBufferInfo(gl, pointsVertexInfo, gl.POINTS);
+      // render the current particles
+      gl.useProgram(rendererInfo.program);
+      twgl.setBuffersAndAttributes(gl, rendererInfo, pointsVertexInfo);
+      twgl.setUniforms(rendererInfo, {
+        u_resolution: [gl.canvas.width, gl.canvas.height],
+        u_simResolution: [simSize, simSize],
+        u_simTexture: fb1.attachments[0],
+        u_time: (Date.now() - startTime) / 500,
+      });
+      twgl.bindFramebufferInfo(gl, pfb2);
+      twgl.drawBufferInfo(gl, pointsVertexInfo, gl.POINTS);
 
-    // render the texture to the screen
-    gl.useProgram(textureRendererInfo.program);
-    twgl.setBuffersAndAttributes(gl, textureRendererInfo, minimalVertexInfo);
-    twgl.setUniforms(textureRendererInfo, {
-      u_resolution: [gl.canvas.width, gl.canvas.height],
-      u_simResolution: [simSize, simSize],
-      u_texture: pfb1.attachments[0],
-    });
-    twgl.bindFramebufferInfo(gl);
-    twgl.drawBufferInfo(gl, minimalVertexInfo);
+      // render the texture to the screen
+      gl.useProgram(textureRendererInfo.program);
+      twgl.setBuffersAndAttributes(gl, textureRendererInfo, minimalVertexInfo);
+      twgl.setUniforms(textureRendererInfo, {
+        u_resolution: [gl.canvas.width, gl.canvas.height],
+        u_simResolution: [simSize, simSize],
+        u_texture: pfb1.attachments[0],
+      });
+      twgl.bindFramebufferInfo(gl);
+      twgl.drawBufferInfo(gl, minimalVertexInfo);
 
-    // swap buffers
-    var tmp = fb1;
-    fb1 = fb2;
-    fb2 = tmp;
+      // swap buffers
+      var tmp = fb1;
+      fb1 = fb2;
+      fb2 = tmp;
 
-    // swap pheromone buffers
-    tmp = pfb1;
-    pfb1 = pfb2;
-    pfb2 = tmp;
-
+      // swap pheromone buffers
+      tmp = pfb1;
+      pfb1 = pfb2;
+      pfb2 = tmp;
+    }
     frameId = requestAnimationFrame(animate);
   }
   if (!disabled)
@@ -148,6 +153,11 @@ function resetAnim() {
   if (frameId)
     cancelAnimationFrame(frameId);
   init();
+}
+
+window.onscroll = () => {
+  var rect = gl.canvas.getBoundingClientRect();
+  pause = (0 > rect.top + gl.canvas.offsetHeight)
 }
 
 function enableFloatTextures(gl) {

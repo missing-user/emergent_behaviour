@@ -6,11 +6,15 @@ var mousepos = [0, 0];
 const frameVertexCoords = [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0];
 enableFloatTextures(gl);
 
-var disabled = false;
+var disabled = false, pause;
 
 // Simulation constants
-const simSize = 1024; // width & height of the simulation textures
-const pCount = simSize * simSize;
+var simSize = 1024; // width & height of the simulation textures
+if (window.devicePixelRatio > 2)
+  simSize = 512;
+var pCount = simSize * simSize;
+canvas.width = simSize;
+canvas.height = simSize;
 
 
 function init() {
@@ -63,29 +67,31 @@ function init() {
   var startTime = Date.now();
 
   function animate() {
-    gl.useProgram(simulatorInfo.program);
-    // simUniforms.u_simTexture = simTexture;
-    simUniforms.u_simTexture = fb1.attachments[0];
-    simUniforms.u_time = (Date.now() - startTime) / 1000;
-    simUniforms.u_forceField = mousepos;
-    twgl.setUniforms(simulatorInfo, simUniforms);
-    twgl.setBuffersAndAttributes(gl, simulatorInfo, minimalVertexInfo);
-    twgl.bindFramebufferInfo(gl, fb2);
-    twgl.drawBufferInfo(gl, minimalVertexInfo);
+    if (!pause) {
+      gl.useProgram(simulatorInfo.program);
+      // simUniforms.u_simTexture = simTexture;
+      simUniforms.u_simTexture = fb1.attachments[0];
+      simUniforms.u_time = (Date.now() - startTime) / 1000;
+      simUniforms.u_forceField = mousepos;
+      twgl.setUniforms(simulatorInfo, simUniforms);
+      twgl.setBuffersAndAttributes(gl, simulatorInfo, minimalVertexInfo);
+      twgl.bindFramebufferInfo(gl, fb2);
+      twgl.drawBufferInfo(gl, minimalVertexInfo);
 
-    //update the sim Texture in renderer
-    gl.useProgram(rendererInfo.program);
-    //gl.bindTexture(gl.TEXTURE_2D, simTexture);
-    twgl.setBuffersAndAttributes(gl, rendererInfo, renderVertexInfo);
-    twgl.setUniforms(rendererInfo, renderUniforms);
-    twgl.bindFramebufferInfo(gl);
+      //update the sim Texture in renderer
+      gl.useProgram(rendererInfo.program);
+      //gl.bindTexture(gl.TEXTURE_2D, simTexture);
+      twgl.setBuffersAndAttributes(gl, rendererInfo, renderVertexInfo);
+      twgl.setUniforms(rendererInfo, renderUniforms);
+      twgl.bindFramebufferInfo(gl);
 
-    // swap buffers
-    var tmp = fb1;
-    fb1 = fb2;
-    fb2 = tmp;
+      // swap buffers
+      var tmp = fb1;
+      fb1 = fb2;
+      fb2 = tmp;
 
-    twgl.drawBufferInfo(gl, renderVertexInfo, gl.POINTS);
+      twgl.drawBufferInfo(gl, renderVertexInfo, gl.POINTS);
+    }
     frameId = requestAnimationFrame(animate);
   }
   if (!disabled)
@@ -147,6 +153,14 @@ function disableSim() {
   document.getElementById('webglWarning').style.display = '';
   disabled = true;
 }
+init();
+
+window.onscroll = () => {
+  var rect = gl.canvas.getBoundingClientRect();
+  pause = (0 > rect.top + gl.canvas.offsetHeight)
+}
+
+//mouse interactivity, might remove, cause I like the geometric patterns better
 
 function setMousePos(e) {
   var rect = gl.canvas.getBoundingClientRect();
@@ -162,5 +176,3 @@ canvas.addEventListener('mouseleave', () => {
   mousepos[0] = 0;
   mousepos[1] = 0;
 });
-
-init();
