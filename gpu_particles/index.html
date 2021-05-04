@@ -19,23 +19,69 @@
   <div class="container" style="margin-top: 1em;">
     <a href="../">Back to Overview</a>
     <div class="row">
-      <div class="column">
-        <h1>GPU Particles</h1>
-        <p>Particle simulations - this time in parallel! Uses textures to store and update positions and velocity
-          information. This way the simulations can be run on the GPU as a simple pixel shader. Since the GPU can't
-          write to the same texture being read, two textures have to be used and swapped each frame.
-          <br>
-          <br>
-          I'll hopefully be able to reuse this as a template for upcoming projects.
-        </p>
-      </div>
+      <h1>GPU Particles</h1>
+      <h2>Overview</h2>
+      <p>Particle simulations - this time in parallel! I built this boilerplate for some upcoming GPU particle projects.
+        Since the simulation is run as a parallel Shader on the GPU, it can handle millions of particles at once!
+      </p>
     </div>
 
     <div class="row">
       <p id="webglWarning" style="display: none;">
         <b style="color: red;">Due to WebGL issues, the simulation might not work well on your device</b>
       </p>
-      <canvas width="1024" height="1024" id="canvas"></canvas>
+      <canvas width="1024" height="1024" class="u-full-width" id="canvas"></canvas>
+    </div>
+
+    <div class="row">
+      <h2>Design Decisions</h2>
+      <p>
+        Each particles is being represented as a pixel in the simulation texture. Since a pixel has 4 color channels,
+        that means we can store 4 floating point numbers per particle. The first two are being used for the 2D
+        position (x and y coordinates), the second two can be used for velocity. Since the particles in the physarum
+        simulation I'm working on will be travelling at constant speeds, I opted to just store the direction and keep
+        a free channel for additional data, like mass. At each time step we adjust the direction according to external
+        forces, then calculate the velocity and position using a simple
+        <a href="https://jurasic-park.de/ode/#euler">Euler integration step</a>. The updated colors get written
+        to one of two framebuffers, that get swapped each frame (Ping-Pong Shader).
+      </p>
+
+      <figure>
+        <img src="../shared/images/simTexture.png" class="u-max-full-width"
+          alt="Data texture containing the particle information">
+        <figcaption>Data texture containing the particle information. The colors of each pixel contain
+          the simulation data of the according particle.</figcaption>
+      </figure>
+      <h2>Drawing to the screen</h2>
+      <p>
+        Obviously we don't want a noisy image like in the figure above, so how do we draw the particles to the
+        screen? That happens in the Vertex Shader. For each pixel of the simulation texture, we create a vertex,
+        whose coordinates get read from the red and green channels of the according pixel. Using the handy
+        <code>GL_POINTS</code> rendering mode, we can simply draw these vertecies to the screen as points! Let's see the
+        result:
+      </p>
+      <figure>
+        <img src="../shared/images/integerErrors.png" class="u-max-full-width"
+          alt="Rounding errors from using 8bit integer textures">
+        <figcaption>Initial results. What happened here?</figcaption>
+      </figure>
+      <p>What happened? The particles should be moving outwards in a straight line, but instead they are all collecting
+        in the upper right corner! This error is caused by the numeric precision of the texture. By default, textures
+        store color values as unsigned 8bit integers - that means we can only use integer values ranging 0 -
+        256. Since we need a lot higher precision and range for the simulation, a differen data type is required. I
+        chose 32bit floating point, which has to be enabled using <code>OES_texture_float</code> first.
+        Let's see how it looks now:
+      </p>
+      <figure>
+        <img src="../shared/images/particlesim.png" class="u-max-full-width"
+          alt="Particle Simulation using a 512xx512 simulation texture">
+        <figcaption>Screenshot of the working particle simulation.</figcaption>
+      </figure>
+
+      <h2>What next?</h2>
+      <p>Now that we have a basic particle simulation we can build uppon, there are a lot of possibilities. Maybe I
+        could add some interactivity, force fields or nice colors - but I think that'll have to wait. For now, this
+        is a good boilerplate to build uppon, I'm sure it'll find use later. </p>
     </div>
   </div>
 
@@ -45,6 +91,30 @@
     
     void main() {
       gl_Position = a_position;
+    }
+  </script>
+
+
+  <!-- inital particle attributes Shader -->
+  <script type="x-shader/x-fragment" id="initShader">
+    precision mediump float;
+    #define M_PI 3.141592653589793
+    
+    uniform vec2 u_simResolution;
+    uniform vec2 u_resolution;
+      
+    vec2 n2rand(vec2 uv) {
+      return vec2(fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453),
+        fract(sin(dot(uv.xy * 1.61803, vec2(12.9898, 78.233))) * 43758.5453));
+    }
+
+    void main() {
+      vec2 uv =2.* gl_FragCoord.xy/u_resolution -1.;
+      //initial positions are in a grid, initial orientation is given by the blue channel [0,2pi]
+      float dir = n2rand(uv).x*2.*M_PI;
+      dir = atan(uv.x, uv.y);
+
+      gl_FragColor = vec4(uv, dir, 1.);
     }
   </script>
 
@@ -93,6 +163,7 @@
     uniform vec2 u_resolution;
     uniform sampler2D u_simTexture;
     uniform float u_dt;
+    uniform vec2 u_forceField;
   
     uniform float D_a, D_b, f, k;
     
@@ -100,14 +171,23 @@
       vec4 simData = texture2D(u_simTexture, gl_FragCoord.xy/u_simResolution);
       vec2 pos = simData.xy;
       float dir = simData.z; 
-      //if (pos.x>1. || pos.x<-1. || pos.y>1. || pos.y<-1.) {
-        if (pos.x*pos.x+pos.y*pos.y>1.) {
+
+
+      if (pos.x*pos.x+pos.y*pos.y>1.) {
         float centerDir = atan(-pos.y, -pos.x);
         float delta = mod(centerDir - dir + 3.*M_PI, 2.*M_PI) - M_PI;
         if(delta > 0.){
-          dir += u_rotationRate *u_dt;
+          dir +=  u_rotationRate *u_dt;
         }else{
-          dir -= u_rotationRate *u_dt;
+          dir -=  u_rotationRate *u_dt;
+        }
+      }else if(u_forceField != vec2(0.)){
+        float centerDir = atan(u_forceField.y-pos.y, u_forceField.x-pos.x);
+        float delta = mod(centerDir - dir + 3.*M_PI, 2.*M_PI) - M_PI;
+        if(delta > .7){
+          dir +=  u_rotationRate *u_dt/4.;
+        }else if(delta< -.7){
+          dir -=  u_rotationRate *u_dt/4.;
         }
       }
       // dir = mod(dir, 2.* M_PI);

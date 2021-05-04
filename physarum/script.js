@@ -34,7 +34,7 @@ function init() {
 
   const attachments = [
     { format: gl.RGBA, type: gl.FLOAT, wrapS: gl.REPEAT, wrapT: gl.REPEAT },
-    { format: gl.DEPTH_STENCIL, },
+
   ];
   //initialize the simulation buffer textures
   //let fb1 = newFramebuffer(gl); //sim 1

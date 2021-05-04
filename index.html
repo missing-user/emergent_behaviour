@@ -62,38 +62,6 @@
     </div>
 
 
-    <!-- Collision avoidance -->
-    <div class="row" style="padding-bottom: 2rem;">
-      <h3>Collision avoidance</h3>
-      <em>24 Apr 2021</em>
-    </div>
-    <div class="row">
-      <div class="one-half column">
-        <p>A JS implementation recreating <a href="https://www.youtube.com/watch?v=SqpIcsN0FTI">this bug</a> I saw on
-          youtube. A basic collision system, but without conservation of momentum. When balls collide, their momentum
-          doesn't change, they just get moved to the side. Over time, the balls will find stable orbits without
-          collisions.</p>
-        <div class="row">
-          <div class="one-half column">
-            <a href="./stableOrbits/" class="button u-full-width">go to website</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="one-half column img_cont">
-        <a href="./stableOrbits/">
-          <picture>
-            <source media="(prefers-color-scheme: dark)" srcset="shared/images/preview_dark.png">
-            <img loading="lazy" src="shared/images/preview.png" class="u-max-full-width img-hover-zoom"
-              alt="stable orbits preview image">
-          </picture>
-        </a>
-      </div>
-    </div>
-    <hr>
-
-
-
     <!-- Reaction-Diffusion -->
     <div class="row" style="padding-bottom: 2rem;">
       <h3>Reaction-Diffusion</h3>
@@ -124,17 +92,41 @@
     </div>
     <hr>
 
+    <!-- GPU particles -->
+    <div class="row" style="padding-bottom: 2rem;">
+      <h3>GPU particles</h3>
+      <em>4 May 2021</em>
+    </div>
+    <div class="row">
+      <div class="one-half column">
+        <p> A basic particle simulation running on the GPU, capable or simulating millions of particles.
+        </p>
+        <div class="row">
+          <div class="one-half column">
+            <a href="./gpu_particles/" class="button u-full-width">go to website</a>
+          </div>
+        </div>
+      </div>
 
+      <div class="one-half column img_cont">
+        <a href="./gpu_particles/">
+          <img loading="lazy" src="./shared/images/particlesim.png" class="u-max-full-width img-hover-zoom"
+            alt="GPU particles preview image">
+        </a>
+      </div>
+    </div>
+    <hr>
 
 
     <!-- Physarum -->
     <div class="row" style="padding-bottom: 2rem;">
       <h3>Physarum</h3>
-      <em>10 May 2021</em>
+      <em>8 May 2021</em>
     </div>
     <div class="row">
       <div class="one-half column">
-        <p> WIP a slime mold simulation using millions of agents
+        <p> A slime mold simulation using millions of agents, based on the GPU particle simulation above and inspired by
+          the work of <a href="https://sagejenson.com/physarum">Sage Jenson</a>
         </p>
         <div class="row">
           <div class="one-half column">
@@ -151,6 +143,38 @@
       </div>
     </div>
     <hr>
+
+
+    <!-- Collision avoidance -->
+    <div class="row" style="padding-bottom: 2rem;">
+      <h3>Collision avoidance</h3>
+      <em>24 Apr 2021</em>
+    </div>
+    <div class="row">
+      <div class="one-half column">
+        <p>A JS implementation recreating <a href="https://www.youtube.com/watch?v=SqpIcsN0FTI">this bug</a> I saw on
+          youtube. A basic collision system, but without conservation of momentum. When balls collide, their momentum
+          doesn't change, they just get moved to the side. Over time, the balls will find stable orbits without
+          collisions.</p>
+        <div class="row">
+          <div class="one-half column">
+            <a href="./stableOrbits/" class="button u-full-width">go to website</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="one-half column img_cont">
+        <a href="./stableOrbits/">
+          <picture>
+            <source media="(prefers-color-scheme: dark)" srcset="shared/images/preview_dark.png">
+            <img loading="lazy" src="shared/images/preview.png" class="u-max-full-width img-hover-zoom"
+              alt="stable orbits preview image">
+          </picture>
+        </a>
+      </div>
+    </div>
+    <hr>
+
 
   </div>
 </body>

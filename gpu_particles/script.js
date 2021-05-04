@@ -2,81 +2,76 @@ var canvas = document.getElementById('canvas');
 
 const gl = canvas.getContext("webgl");
 var frameId;
+var mousepos = [0, 0];
 const frameVertexCoords = [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0];
 enableFloatTextures(gl);
 
 var disabled = false;
-var iterations = 2;
-if (window.devicePixelRatio > 2) {
-  iterations = 1; // half the simulation steps on mobile 
-}
 
 // Simulation constants
 const simSize = 1024; // width & height of the simulation textures
 const pCount = simSize * simSize;
-const debug = false;
 
 
 function init() {
-  //initialize the render shader
-  /*const rendererInfo = twgl.createProgramInfo(gl, ['vs', 'renderShader']);
-  const renderUniforms = {
-    u_resolution: [gl.canvas.width, gl.canvas.height],
-    u_simResolution: [simSize, simSize],
-    u_simTexture: initSimTexture(),
-  }*/
-  var simTexture = initSimTexture();
-  //initialize the particle render shader
-  const rendererInfo = twgl.createProgramInfo(gl, [debug ? 'vs' : 'vs_points', 'renderShader']);
-  const renderUniforms = {
-    u_resolution: [gl.canvas.width, gl.canvas.height],
-    u_simResolution: [simSize, simSize],
-    u_simTexture: simTexture,
-  }
-  const renderVertexInfo = twgl.createBufferInfoFromArrays(gl, {
-    a_Index: { numComponents: 2, data: initIndices(), },
-  });
-
   //initialize the buffer textures
-  var t1 = simTexture, t2 = initTexture();
-  const fb1 = newFramebuffer(gl, t1), fb2 = newFramebuffer(gl, t2);
+  const attachments = [
+    { format: gl.RGBA, type: gl.FLOAT, wrapS: gl.REPEAT, wrapT: gl.REPEAT },
+  ];
+  let fb1 = twgl.createFramebufferInfo(gl, attachments);
+  let fb2 = twgl.createFramebufferInfo(gl, attachments); //sim 2
 
-  //initialize the simulation shader
-  const simVertexInfo = twgl.createBufferInfoFromArrays(gl, {
-    a_position: frameVertexCoords,
-  });
+  //initialize the shaders
+  const initInfo = twgl.createProgramInfo(gl, ['vs', 'initShader']);
+  const rendererInfo = twgl.createProgramInfo(gl, ['vs_points', 'renderShader']);
   const simulatorInfo = twgl.createProgramInfo(gl, ['vs', 'simShader']);
-  const simUniforms = {
-    u_dt: .002,
+
+  // init uniforms
+  const renderUniforms = {
     u_resolution: [gl.canvas.width, gl.canvas.height],
     u_simResolution: [simSize, simSize],
-    u_simTexture: t1,
+    u_simTexture: fb1.attachments[0],
+  }
+  const simUniforms = {
+    u_dt: .02,
+    u_resolution: [gl.canvas.width, gl.canvas.height],
+    u_simResolution: [simSize, simSize],
+    u_simTexture: fb1.attachments[0],
     u_speed: .2,
     u_rotationRate: 2,
     u_time: 0,
   };
-  gl.useProgram(simulatorInfo.program);
-  twgl.setUniforms(simulatorInfo, simUniforms);
-  twgl.setBuffersAndAttributes(gl, simulatorInfo, simVertexInfo);
+
+  //init vertex info
+  const renderVertexInfo = twgl.createBufferInfoFromArrays(gl, {
+    a_Index: { numComponents: 2, data: initIndices(), },
+  });
+  const minimalVertexInfo = twgl.createBufferInfoFromArrays(gl, {
+    a_position: frameVertexCoords,
+  });
+
+  // particle initialization
+  gl.useProgram(initInfo.program);
+  twgl.setBuffersAndAttributes(gl, initInfo, minimalVertexInfo);
+  twgl.setUniforms(initInfo, {
+    u_resolution: [gl.canvas.width, gl.canvas.height],
+    u_simResolution: [simSize, simSize],
+  });
+  twgl.bindFramebufferInfo(gl, fb1);
+  twgl.drawBufferInfo(gl, minimalVertexInfo);
+
   var startTime = Date.now();
 
   function animate() {
     gl.useProgram(simulatorInfo.program);
     // simUniforms.u_simTexture = simTexture;
-    simUniforms.u_simTexture = t1;
+    simUniforms.u_simTexture = fb1.attachments[0];
     simUniforms.u_time = (Date.now() - startTime) / 1000;
+    simUniforms.u_forceField = mousepos;
     twgl.setUniforms(simulatorInfo, simUniforms);
-    twgl.setBuffersAndAttributes(gl, simulatorInfo, simVertexInfo);
-    for (var i = 0; i < iterations; i++) {
-      //frame buffer swap
-      gl.bindTexture(gl.TEXTURE_2D, t1);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, fb2);
-      twgl.drawBufferInfo(gl, simVertexInfo);
-
-      gl.bindTexture(gl.TEXTURE_2D, t2);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, fb1);
-      twgl.drawBufferInfo(gl, simVertexInfo);
-    }
+    twgl.setBuffersAndAttributes(gl, simulatorInfo, minimalVertexInfo);
+    twgl.bindFramebufferInfo(gl, fb2);
+    twgl.drawBufferInfo(gl, minimalVertexInfo);
 
     //update the sim Texture in renderer
     gl.useProgram(rendererInfo.program);
@@ -85,7 +80,12 @@ function init() {
     twgl.setUniforms(rendererInfo, renderUniforms);
     twgl.bindFramebufferInfo(gl);
 
-    twgl.drawBufferInfo(gl, renderVertexInfo, debug ? undefined : gl.POINTS);
+    // swap buffers
+    var tmp = fb1;
+    fb1 = fb2;
+    fb2 = tmp;
+
+    twgl.drawBufferInfo(gl, renderVertexInfo, gl.POINTS);
     frameId = requestAnimationFrame(animate);
   }
   if (!disabled)
@@ -147,5 +147,20 @@ function disableSim() {
   document.getElementById('webglWarning').style.display = '';
   disabled = true;
 }
+
+function setMousePos(e) {
+  var rect = gl.canvas.getBoundingClientRect();
+  mousepos[0] = (e.clientX - rect.left) / gl.canvas.clientWidth;
+  mousepos[1] = 1 - (e.clientY - rect.top) / gl.canvas.clientHeight;
+  for (let i = 0; i < 2; i++)
+    mousepos[i] = mousepos[i] * 2 - 1;
+}
+
+canvas.addEventListener('mousemove', setMousePos);
+
+canvas.addEventListener('mouseleave', () => {
+  mousepos[0] = 0;
+  mousepos[1] = 0;
+});
 
 init();

@@ -1,3 +1,7 @@
+body {
+  counter-reset: figures;
+}
+
 p {
   text-align: justify;
 }
@@ -54,6 +58,14 @@ a.button {
   text-decoration: none;
   white-space: nowrap;
   line-height: 1.6em;
+}
+
+figure {
+  counter-increment: figures;
+}
+
+figure figcaption:before {
+  content: 'Fig. ' counter(figures) ' - ';
 }
 
 @media (prefers-color-scheme:dark) {
