@@ -24,25 +24,26 @@ function init() {
   });
 
   const initInfo = twgl.createProgramInfo(gl, ['vs', 'initShader']);
-
-  //initialize the texture render shader
+  const diffInfo = twgl.createProgramInfo(gl, ['vs', 'diffusionShader']);
+  const simulatorInfo = twgl.createProgramInfo(gl, ['vs', 'simShader']);
   const textureRendererInfo = twgl.createProgramInfo(gl, ['vs', 'textureRenderShader']);
 
   //initialize the simulation buffer textures
   let fb1 = newFramebuffer(gl); //sim 1
   let fb2 = newFramebuffer(gl); //sim 2
-  let fb3 = newFramebuffer(gl); //for the pheromones
+
+  let pfb1 = newFramebuffer(gl); //phero 1
+  let pfb2 = newFramebuffer(gl); //phero 2
 
 
   //initialize the simulation shader
-  const simulatorInfo = twgl.createProgramInfo(gl, ['vs', 'simShader']);
   const simUniforms = {
     u_dt: .02,
     u_resolution: [gl.canvas.width, gl.canvas.height],
     u_simResolution: [simSize, simSize],
     u_searchDistance: 5,
     u_speed: .3,
-    u_rotationRate: 2,
+    u_rotationRate: 3,
     u_searchAngle: .2,
     u_time: 0,
   };
@@ -63,9 +64,22 @@ function init() {
     gl.useProgram(simulatorInfo.program);
     twgl.setBuffersAndAttributes(gl, simulatorInfo, minimalVertexInfo);
     simUniforms.u_simTexture = fb1.attachments[0];
-    simUniforms.u_pheroTexture = fb3.attachments[0];
+    simUniforms.u_pheroTexture = pfb1.attachments[0];
     twgl.setUniforms(simulatorInfo, simUniforms);
     twgl.bindFramebufferInfo(gl, fb2);
+    twgl.drawBufferInfo(gl, minimalVertexInfo);
+
+    //diffuse pheromones
+    gl.useProgram(diffInfo.program);
+    twgl.setBuffersAndAttributes(gl, diffInfo, minimalVertexInfo);
+    twgl.setUniforms(diffInfo, {
+      u_resolution: [gl.canvas.width, gl.canvas.height],
+      u_simResolution: [simSize, simSize],
+      u_pheroTexture: pfb1.attachments[0],
+      u_evaporationSpeed: .96,
+
+    });
+    twgl.bindFramebufferInfo(gl, pfb2);
     twgl.drawBufferInfo(gl, minimalVertexInfo);
 
     // render the current particles
@@ -74,54 +88,33 @@ function init() {
     twgl.setUniforms(rendererInfo, {
       u_resolution: [gl.canvas.width, gl.canvas.height],
       u_simResolution: [simSize, simSize],
-      u_simTexture: fb2.attachments[0],
-      u_time: (Date.now() - startTime) / 500
+      u_simTexture: fb1.attachments[0],
+      u_time: (Date.now() - startTime) / 500,
     });
-    twgl.bindFramebufferInfo(gl, fb3);
+    twgl.bindFramebufferInfo(gl, pfb2);
     twgl.drawBufferInfo(gl, pointsVertexInfo, gl.POINTS);
 
-    // swap buffers
-    tmp = fb1;
-    fb1 = fb2;
-    fb2 = tmp;
-
-
-    //update pheromone texture
-    /*gl.useProgram(pheromoneInfo.program);
-    twgl.setUniforms(pheromoneInfo, pheroUniforms);
-    twgl.setBuffersAndAttributes(gl, pheromoneInfo, minimalVertexInfo);
-    for (var i = 0; i < iterations; i++) {
-      //frame buffer swap
-      gl.bindTexture(gl.TEXTURE_2D, pt1);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, pfb2);
-      twgl.drawBufferInfo(gl, minimalVertexInfo);
-
-
-      gl.bindTexture(gl.TEXTURE_2D, pt2);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, pfb1);
-      twgl.drawBufferInfo(gl, minimalVertexInfo);
-    }
-
-    // render the current particles
-    gl.useProgram(rendererInfo.program);
-    twgl.setBuffersAndAttributes(gl, rendererInfo, pointsVertexInfo);
-    twgl.setUniforms(rendererInfo, {
-      u_resolution: [gl.canvas.width, gl.canvas.height],
-      u_simResolution: [simSize, simSize],
-    });
-    gl.bindFramebuffer(gl.FRAMEBUFFER, renderBuffer);
-    twgl.drawBufferInfo(gl, pointsVertexInfo, gl.POINTS);*/
-
-
+    // render the texture to the screen
     gl.useProgram(textureRendererInfo.program);
     twgl.setBuffersAndAttributes(gl, textureRendererInfo, minimalVertexInfo);
     twgl.setUniforms(textureRendererInfo, {
       u_resolution: [gl.canvas.width, gl.canvas.height],
       u_simResolution: [simSize, simSize],
-      u_simTexture: fb3.attachments[0],
+      u_texture: pfb2.attachments[0],
     });
     twgl.bindFramebufferInfo(gl);
     twgl.drawBufferInfo(gl, minimalVertexInfo);
+
+    // swap buffers
+    var tmp = fb1;
+    fb1 = fb2;
+    fb2 = tmp;
+
+    // swap pheromone buffers
+    tmp = pfb1;
+    pfb1 = pfb2;
+    pfb2 = tmp;
+
     frameId = requestAnimationFrame(animate);
   }
   if (!disabled)

@@ -51,19 +51,6 @@
   </script>
 
 
-  <!-- Texture Render Shader -->
-  <script type="x-shader/x-fragment" id="textureRenderShader">
-    precision mediump float;
-    
-    uniform vec2 u_simResolution;
-    uniform vec2 u_resolution;
-    uniform sampler2D u_simTexture;
-      
-    void main() {
-     gl_FragColor = texture2D(u_simTexture, gl_FragCoord.xy/u_resolution);
-    }
-  </script>
-
   <!-- Point Sprite Vertex Shader -->
   <script id="vs_points" type="x-shader/x-vertex">
     precision mediump float;
@@ -77,24 +64,64 @@
       vec4 simData = texture2D(u_simTexture, 2.*a_Index/u_simResolution-1.);
       vec2 pos = simData.xy;
       gl_Position = vec4(pos, 0.0, 1.0);
-      gl_PointSize =1.0;
+      gl_PointSize = 1.0;
     }
   </script>
 
-  <!-- Final Render Shader -->
+  <!-- Texture Render Shader -->
+  <script type="x-shader/x-fragment" id="textureRenderShader">
+    precision mediump float;
+    
+    uniform vec2 u_simResolution;
+    uniform vec2 u_resolution;
+    uniform sampler2D u_texture;
+      
+    void main() {
+      vec4 texValue = texture2D(u_texture, gl_FragCoord.xy/u_resolution);
+      gl_FragColor = texValue;
+    }
+  </script>
+
+  <!-- Particle Render Shader -->
   <script type="x-shader/x-fragment" id="renderShader">
     precision mediump float;
     
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
-    uniform sampler2D u_simTexture;
     uniform float u_time;
       
     void main() {
-      vec4 simData = texture2D(u_simTexture, gl_FragCoord.xy/u_resolution);
-  
-     gl_FragColor = vec4(simData.rgb, 1.);
-     gl_FragColor = vec4(sin(u_time)/2.+.5, cos(u_time)/2.+.5,0.,1.);
+      gl_FragColor = vec4(1.);
+      gl_FragColor = vec4(1.,0.,0.,1.);
+    }
+  </script>
+
+
+  <!-- Pheromone Diffusion Shader -->
+  <script type="x-shader/x-fragment" id="diffusionShader">
+    precision mediump float;
+    
+    uniform vec2 u_simResolution;
+    uniform vec2 u_resolution;
+    uniform sampler2D u_pheroTexture;
+    uniform float u_evaporationSpeed;
+    // write particles to r and g channels, those get cleared
+    // diffuse b and w, add r and g to them
+    vec4 getPixel(vec2 offset){
+      vec2 particleVal = texture2D(u_pheroTexture, (gl_FragCoord.xy+offset)/u_resolution).xy;
+      vec2 pheroVal = texture2D(u_pheroTexture, (gl_FragCoord.xy+offset)/u_resolution).zw;
+      
+      return vec4(0.,0., pheroVal+particleVal);
+    }
+
+    void main() {
+      
+     vec4 sum = getPixel(vec2(-1.,-1.)) + getPixel(vec2(0.,-1.)) + getPixel(vec2(1.,-1.))+
+                getPixel(vec2(-1.,0.)) + getPixel(vec2(0.)) + getPixel(vec2(1.,0.))+
+                getPixel(vec2(-1.,1.)) + getPixel(vec2(0.,1.)) + getPixel(vec2(1.,1.));
+     vec4 average = sum/9.;
+
+     gl_FragColor = average*u_evaporationSpeed;
     }
   </script>
 
