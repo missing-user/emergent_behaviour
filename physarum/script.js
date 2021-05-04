@@ -15,6 +15,9 @@ var disabled = false;
 const simSize = 1024; // width & height of the simulation textures
 const pCount = simSize * simSize;
 
+function getRangeVal(id) {
+  return document.getElementById(id).value;
+}
 
 function init() {
   //initialize the particle render shader
@@ -28,25 +31,22 @@ function init() {
   const simulatorInfo = twgl.createProgramInfo(gl, ['vs', 'simShader']);
   const textureRendererInfo = twgl.createProgramInfo(gl, ['vs', 'textureRenderShader']);
 
-  //initialize the simulation buffer textures
-  let fb1 = newFramebuffer(gl); //sim 1
-  let fb2 = newFramebuffer(gl); //sim 2
 
-  let pfb1 = newFramebuffer(gl); //phero 1
-  let pfb2 = newFramebuffer(gl); //phero 2
+  const attachments = [
+    { format: gl.RGBA, type: gl.FLOAT, wrapS: gl.REPEAT, wrapT: gl.REPEAT },
+    { format: gl.DEPTH_STENCIL, },
+  ];
+  //initialize the simulation buffer textures
+  //let fb1 = newFramebuffer(gl); //sim 1
+  let fb1 = twgl.createFramebufferInfo(gl, attachments);
+  let fb2 = twgl.createFramebufferInfo(gl, attachments); //sim 2
+
+  let pfb1 = twgl.createFramebufferInfo(gl, attachments);
+  let pfb2 = twgl.createFramebufferInfo(gl, attachments);
+
 
 
   //initialize the simulation shader
-  const simUniforms = {
-    u_dt: .02,
-    u_resolution: [gl.canvas.width, gl.canvas.height],
-    u_simResolution: [simSize, simSize],
-    u_searchDistance: 5,
-    u_speed: .3,
-    u_rotationRate: 3,
-    u_searchAngle: .2,
-    u_time: 0,
-  };
   var startTime = Date.now();
 
   // particle initialization
@@ -60,15 +60,6 @@ function init() {
   twgl.drawBufferInfo(gl, minimalVertexInfo);
 
   function animate() {
-    //update simulation
-    gl.useProgram(simulatorInfo.program);
-    twgl.setBuffersAndAttributes(gl, simulatorInfo, minimalVertexInfo);
-    simUniforms.u_simTexture = fb1.attachments[0];
-    simUniforms.u_pheroTexture = pfb1.attachments[0];
-    twgl.setUniforms(simulatorInfo, simUniforms);
-    twgl.bindFramebufferInfo(gl, fb2);
-    twgl.drawBufferInfo(gl, minimalVertexInfo);
-
     //diffuse pheromones
     gl.useProgram(diffInfo.program);
     twgl.setBuffersAndAttributes(gl, diffInfo, minimalVertexInfo);
@@ -76,10 +67,28 @@ function init() {
       u_resolution: [gl.canvas.width, gl.canvas.height],
       u_simResolution: [simSize, simSize],
       u_pheroTexture: pfb1.attachments[0],
-      u_evaporationSpeed: .96,
-
+      u_evaporationRate: getRangeVal('evaporationrate'),
     });
     twgl.bindFramebufferInfo(gl, pfb2);
+    twgl.drawBufferInfo(gl, minimalVertexInfo);
+
+    //update simulation
+    gl.useProgram(simulatorInfo.program);
+    twgl.setBuffersAndAttributes(gl, simulatorInfo, minimalVertexInfo);
+
+    twgl.setUniforms(simulatorInfo, {
+      u_dt: .05,
+      u_resolution: [gl.canvas.width, gl.canvas.height],
+      u_simResolution: [simSize, simSize],
+      u_searchDistance: getRangeVal('searchdistance'),
+      u_speed: getRangeVal('movementspeed'),
+      u_rotationRate: getRangeVal('rotationrate'),
+      u_searchAngle: getRangeVal('searchangle'),
+      u_pheroTexture: pfb2.attachments[0],
+      u_simTexture: fb1.attachments[0],
+      u_time: (Date.now() - startTime) / 1000,
+    });
+    twgl.bindFramebufferInfo(gl, fb2);
     twgl.drawBufferInfo(gl, minimalVertexInfo);
 
     // render the current particles
@@ -100,7 +109,7 @@ function init() {
     twgl.setUniforms(textureRendererInfo, {
       u_resolution: [gl.canvas.width, gl.canvas.height],
       u_simResolution: [simSize, simSize],
-      u_texture: pfb2.attachments[0],
+      u_texture: pfb1.attachments[0],
     });
     twgl.bindFramebufferInfo(gl);
     twgl.drawBufferInfo(gl, minimalVertexInfo);
@@ -124,7 +133,7 @@ function init() {
 function initIndices() {
   // uv positions for sprites in the vertex shader 
   // (where in the sim texture do the particles get their simulation data from)
-  const simIndex = new Float32Array(pCount * 2);
+  const simIndex = new Float32Array(pCount / 4);
   for (let x = 0; x < simSize; x++) {
     for (let y = 0; y < simSize; y++) {
       let i = (x * simSize + y) * 2;
@@ -133,19 +142,6 @@ function initIndices() {
     }
   }
   return simIndex;
-}
-
-function newFramebuffer(gl, h = simSize, w = simSize) {
-  const floatBuffer = new Float32Array(w * h * 4);
-  var texture = twgl.createTexture(gl, {
-    src: floatBuffer,
-    width: w,
-  });
-  //creates a float32 framebuffer object
-  var fb = gl.createFramebuffer();
-  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-  return { framebuffer: fb, attachments: [texture], height: h, width: w };
 }
 
 function resetAnim() {
