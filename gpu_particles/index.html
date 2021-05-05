@@ -21,8 +21,8 @@
     <div class="row">
       <h1>GPU Particles</h1>
       <h2>Overview</h2>
-      <p>Particle simulations - this time in parallel! I built this boilerplate for some upcoming GPU particle projects.
-        Since the simulation is run as a parallel Shader on the GPU, it can handle millions of particles at once!
+      <p>Particle simulations - this time in parallel! Since the simulation is run as a shader on the GPU, it
+        can handle millions of particles at once!
       </p>
     </div>
 
@@ -31,34 +31,35 @@
         <b style="color: red;">Due to WebGL issues, the simulation might not work well on your device</b>
       </p>
       <canvas width="1024" height="1024" class="u-full-width" id="canvas"></canvas>
+      <button onclick="reinit()">restart</button>
     </div>
 
     <div class="row">
       <h2>Design Decisions</h2>
       <p>
-        Each particles is being represented as a pixel in the simulation texture. Since a pixel has 4 color channels,
-        that means we can store 4 floating point numbers per particle. The first two are being used for the 2D
-        position (x and y coordinates), the second two can be used for velocity. Since the particles in the physarum
-        simulation I'm working on will be travelling at constant speeds, I opted to just store the direction and keep
-        a free channel for additional data, like mass. At each time step we adjust the direction according to external
-        forces, then calculate the velocity and position using a simple
-        <a href="https://jurasic-park.de/ode/#euler">Euler integration step</a>. The updated colors get written
-        to one of two framebuffers, that get swapped each frame (Ping-Pong Shader).
+        Each particle is being represented as a pixel in a simulation texture. Because every pixel has 4 color channels,
+        4 floating point numbers can be stored per particle. The first two represent the 2D position (x and y
+        coordinate), the second two usually get used for velocity. Since the particles in this particular simulation
+        will be travelling at constant speeds, I decided to only store the direction instead and keep a free channel for
+        additional data, like mass. At each time step we use a fragment shader to update the simulation texture, by
+        calculating the new velocity and position using a simple <a href="/ode/#euler">Euler
+          integration step</a>. The updated colors are written to one of two framebuffers, that get swapped each frame
+        (Ping-Pong Shader).
       </p>
 
       <figure>
         <img src="../shared/images/simTexture.png" class="u-max-full-width"
           alt="Data texture containing the particle information">
-        <figcaption>Data texture containing the particle information. The colors of each represent position and velocity
-          of the according particle.</figcaption>
+        <figcaption>Data texture containing the particle information. Each pixels color represents position and
+          velocity of an according particle.</figcaption>
       </figure>
       <h2>Drawing to the screen</h2>
       <p>
         Obviously we don't want a noisy image like in the figure above, so how do we draw the particles to the
-        screen? That happens in the Vertex Shader. For each pixel of the simulation texture, we create a vertex,
-        whose coordinates get read from the red and green channels of the according pixel. Using the handy
-        <code>GL_POINTS</code> rendering mode, we can simply draw these vertecies to the screen as points! Let's see the
-        result:
+        screen? That happens in the Vertex Shader. For each pixel of the simulation texture, a vertex is created,
+        whose coordinates get read from the red and green channels of the according pixel. Since the simulation is only
+        2D, the z coordinate of all particles is set to 0. Using the handy <code>GL_POINTS</code> rendering mode, these
+        vertecies can then be drawn to the screen as points!
       </p>
       <figure>
         <img src="../shared/images/integerErrors.png" class="u-max-full-width"
@@ -67,28 +68,25 @@
       </figure>
       <p>What happened? The particles should be moving outwards in a straight line, but instead they are all collecting
         in the upper right corner! This error is caused by the numeric precision of the texture. By default, textures
-        store color values as unsigned 8bit integers - that means we can only use integer values ranging 0 -
-        256. Since we need a lot higher precision and range for the simulation, a differen data type is required. I
-        chose 32bit floating point, which has to be enabled using <code>OES_texture_float</code> first.
-        Let's see how it looks now:
+        store color values as unsigned 8bit integers - that means only 256 values ranging [0, 1] are available. That
+        might be fine for the typical color data stored in textures, but a simulation requires both higher precision and
+        range. I opted for 32bit floating point textures, which allow for arbitrary unclamped values with very high
+        numeric precision.
       </p>
       <figure>
         <img src="../shared/images/particlesim.png" class="u-max-full-width"
-          alt="Particle Simulation using a 512xx512 simulation texture">
+          alt="Particle Simulation using a 512x512 simulation texture">
         <figcaption>Screenshot of the working particle simulation.</figcaption>
       </figure>
-
-      <h2>What next?</h2>
-      <p>Now that we have a basic particle simulation we can build uppon, there are a lot of possibilities. Maybe I
-        could add some interactivity, force fields or nice colors - but I think that'll have to wait. For now, this
-        is a good boilerplate to build uppon, I'm sure it'll find use later. </p>
+      <p>With the basic simulation up and running, many other concepts can be explored. One possibility would be to add
+        force fields or interactions between particles. For example I'll be exploring agent based simulations of slime
+        molds in <a href="../physarum/">this experiment</a> soon.</p>
     </div>
   </div>
 
   <!-- Minimal Vertex Shader -->
   <script id="vs" type="x-shader/x-vertex">
     attribute vec4 a_position;
-    
     void main() {
       gl_Position = a_position;
     }
@@ -102,6 +100,7 @@
     
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
+    uniform int u_mode;
       
     vec2 n2rand(vec2 uv) {
       return vec2(fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453),
@@ -111,8 +110,21 @@
     void main() {
       vec2 uv =2.* gl_FragCoord.xy/u_resolution -1.;
       //initial positions are in a grid, initial orientation is given by the blue channel [0,2pi]
-      float dir = n2rand(uv).x*2.*M_PI;
-      dir = atan(uv.x, uv.y);
+      float dir;
+      //for some reason switch wasn't working
+      if(u_mode == 1){
+        dir = atan(uv.x, uv.y);
+      }else if(u_mode == 2){
+        dir = cos(3.*uv.x)*sin(3.*uv.y)*2.*M_PI;
+      }else if(u_mode == 3){
+        dir = acos(uv.x/uv.y);
+      }else if(u_mode == 4){
+        dir = uv.x/uv.y;
+      }else if(u_mode == 5){
+        dir = atan(uv.y,uv.x);
+      }else{
+        dir = n2rand(uv).x*2.*M_PI;
+      }
 
       gl_FragColor = vec4(uv, dir, 1.);
     }
@@ -130,7 +142,7 @@
     void main() {
       vec4 simData = texture2D(u_simTexture, 2.*a_Index/u_simResolution-1.);
       vec2 pos = simData.xy;
-      gl_Position = vec4(pos, 0.0, 1.0);
+      gl_Position = vec4(pos, .0, 1.);
       gl_PointSize =1.0;
     }
   </script>

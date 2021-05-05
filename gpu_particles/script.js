@@ -3,8 +3,6 @@ var canvas = document.getElementById('canvas');
 const gl = canvas.getContext("webgl");
 var frameId;
 var mousepos = [0, 0];
-const frameVertexCoords = [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0];
-enableFloatTextures(gl);
 
 var disabled = false, pause;
 var pColor = [0, 0, 0];
@@ -29,6 +27,9 @@ canvas.height = simSize;
 
 
 function init() {
+  enableFloatTextures(gl);
+  const frameVertexCoords = [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0];
+
   //initialize the buffer textures
   const attachments = [
     { format: gl.RGBA, type: gl.FLOAT, wrapS: gl.REPEAT, wrapT: gl.REPEAT },
@@ -65,16 +66,26 @@ function init() {
     a_position: frameVertexCoords,
   });
 
-  // particle initialization
-  gl.useProgram(initInfo.program);
-  twgl.setBuffersAndAttributes(gl, initInfo, minimalVertexInfo);
-  twgl.setUniforms(initInfo, {
-    u_resolution: [gl.canvas.width, gl.canvas.height],
-    u_simResolution: [simSize, simSize],
-  });
-  twgl.bindFramebufferInfo(gl, fb1);
-  twgl.drawBufferInfo(gl, minimalVertexInfo);
+  function initParticleTexture(mode) {
+    // particle initialization
+    gl.useProgram(initInfo.program);
+    twgl.setBuffersAndAttributes(gl, initInfo, minimalVertexInfo);
+    twgl.setUniforms(initInfo, {
+      u_resolution: [gl.canvas.width, gl.canvas.height],
+      u_simResolution: [simSize, simSize],
+      u_mode: mode | 0,
+    });
+    twgl.bindFramebufferInfo(gl, fb1);
+    twgl.drawBufferInfo(gl, minimalVertexInfo);
+  }
+  //expose the function
+  var currentMode = 0;
+  window.reinit = () => {
+    currentMode++;
+    initParticleTexture(currentMode % 6);
+  };
 
+  initParticleTexture();
   var startTime = Date.now();
 
   function animate() {
@@ -95,36 +106,17 @@ function init() {
       twgl.setBuffersAndAttributes(gl, rendererInfo, renderVertexInfo);
       twgl.setUniforms(rendererInfo, renderUniforms);
       twgl.bindFramebufferInfo(gl);
+      twgl.drawBufferInfo(gl, renderVertexInfo, gl.POINTS);
 
       // swap buffers
       var tmp = fb1;
       fb1 = fb2;
       fb2 = tmp;
-
-      twgl.drawBufferInfo(gl, renderVertexInfo, gl.POINTS);
     }
     frameId = requestAnimationFrame(animate);
   }
   if (!disabled)
     frameId = requestAnimationFrame(animate);
-}
-
-function initSimTexture() {
-  // simulation texture, stores positions in xy and velocities in zw
-  const pTexture = new Float32Array(pCount * 4);
-  for (let x = 0; x < simSize; x++) {
-    for (let y = 0; y < simSize; y++) {
-      let i = (x * simSize + y) * 4;
-      pTexture[i] = x / simSize * 2 - 1 //(2 * Math.random() - 1); //p_x
-      pTexture[i + 1] = y / simSize * 2 - 1 //(2 * Math.random() - 1); //p_y
-      pTexture[i + 2] = Math.acos(pTexture[i] / pTexture[i + 1]); //orientation from 0 to 2pi
-      pTexture[i + 3] = Math.random(); //pheromones
-    }
-  }
-  return twgl.createTexture(gl, {
-    src: pTexture,
-    width: simSize,
-  });
 }
 
 function initIndices() {
@@ -139,14 +131,6 @@ function initIndices() {
     }
   }
   return simIndex;
-}
-
-function initTexture() {
-  const floatBuffer = new Float32Array(gl.canvas.width * gl.canvas.height * 4);
-  return twgl.createTexture(gl, {
-    src: floatBuffer,
-    width: gl.canvas.width,
-  });
 }
 
 function resetAnim() {
@@ -166,13 +150,14 @@ function disableSim() {
 }
 init();
 
+//pause simulation when invisible for performance
 window.onscroll = () => {
   var rect = gl.canvas.getBoundingClientRect();
   pause = (0 > rect.top + gl.canvas.offsetHeight)
 }
 
 //mouse interactivity, might remove, cause I like the geometric patterns better
-
+/*
 function setMousePos(e) {
   var rect = gl.canvas.getBoundingClientRect();
   mousepos[0] = (e.clientX - rect.left) / gl.canvas.clientWidth;
@@ -186,4 +171,4 @@ canvas.addEventListener('mousemove', setMousePos);
 canvas.addEventListener('mouseleave', () => {
   mousepos[0] = 0;
   mousepos[1] = 0;
-});
+});*/
