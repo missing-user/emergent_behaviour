@@ -90,20 +90,6 @@ function initTexture() {
   });
 }
 
-/*  var simUniforms ={};
-    simUniforms.D_a = document.getElementById('daslider').value;
-    simUniforms.D_b = document.getElementById('dbslider').value;
-    simUniforms.f = document.getElementById('fslider').value;
-    simUniforms.k = document.getElementById('kslider').value;
-    console.log(JSON.stringify(simUniforms))
- */
-
-function resetAnim() {
-  if (frameId)
-    cancelAnimationFrame(frameId);
-  init();
-}
-
 function setPreset(params) {
   params = JSON.parse(params)
   document.getElementById('daslider').value = params.D_a;
@@ -120,13 +106,12 @@ function newFramebuffer(gl, texture) {
 }
 
 function enableFloatTextures(gl) {
-  if (!gl.getExtension("OES_texture_float")) disableSim();
-  if (!gl.getExtension("OES_texture_float_linear")) disableSim();
-}
-
-function disableSim() {
-  document.getElementById('webglWarning').style.display = '';
-  disabled = true;
+  function webglError() {
+    document.getElementById('webglWarning').style.display = '';
+    disabled = true;
+  }
+  if (!gl.getExtension("OES_texture_float")) webglError();
+  if (!gl.getExtension("OES_texture_float_linear")) webglError();
 }
 
 init();

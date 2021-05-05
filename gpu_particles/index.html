@@ -28,7 +28,7 @@
 
     <div class="row">
       <p id="webglWarning" style="display: none;">
-        <b style="color: red;">Due to WebGL issues, the simulation might not work well on your device</b>
+        <b style="color: red;">Due to WebGL issues, the simulation does not work on your device</b>
       </p>
       <canvas width="1024" height="1024" class="u-full-width" id="canvas"></canvas>
       <button onclick="reinit()">restart</button>
@@ -137,7 +137,7 @@
     attribute vec2 a_Index; // UV index of the sprite
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution; // width/height of screen
-    uniform sampler2D u_simTexture;
+    uniform sampler2D u_simTexture; //simulation texture from pingpong buffer
 
     void main() {
       vec4 simData = texture2D(u_simTexture, 2.*a_Index/u_simResolution-1.);
@@ -171,17 +171,15 @@
     uniform float u_rotationRate;
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
-    uniform sampler2D u_simTexture;
+    uniform sampler2D u_texture;
     uniform float u_dt;
-    uniform vec2 u_forceField;
   
     uniform float D_a, D_b, f, k;
     
     void main() {
-      vec4 simData = texture2D(u_simTexture, gl_FragCoord.xy/u_simResolution);
+      vec4 simData = texture2D(u_texture, gl_FragCoord.xy/u_simResolution);
       vec2 pos = simData.xy;
       float dir = simData.z; 
-
 
       if (pos.x*pos.x+pos.y*pos.y>1.) {
         float centerDir = atan(-pos.y, -pos.x);
@@ -190,14 +188,6 @@
           dir +=  u_rotationRate *u_dt;
         }else{
           dir -=  u_rotationRate *u_dt;
-        }
-      }else if(u_forceField != vec2(0.)){
-        float centerDir = atan(u_forceField.y-pos.y, u_forceField.x-pos.x);
-        float delta = mod(centerDir - dir + 3.*M_PI, 2.*M_PI) - M_PI;
-        if(delta > .7){
-          dir +=  u_rotationRate *u_dt/4.;
-        }else if(delta< -.7){
-          dir -=  u_rotationRate *u_dt/4.;
         }
       }
       // dir = mod(dir, 2.* M_PI);

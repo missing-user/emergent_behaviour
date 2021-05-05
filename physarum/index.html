@@ -35,7 +35,7 @@
 
     <div class="row">
       <p id="webglWarning" style="display: none;">
-        <b style="color: red;">Due to WebGL issues, the simulation might not work well on your device</b>
+        <b style="color: red;">Due to WebGL issues, the simulation does not work on your device</b>
       </p>
       <canvas width="1024" height="1024" class="u-full-width" id="canvas"></canvas>
       <label>Search Angle
@@ -73,10 +73,10 @@
     attribute vec2 a_Index; // UV index of the sprite
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution; // width/height of screen
-    uniform sampler2D u_simTexture;
+    uniform sampler2D u_texture;
 
     void main() {
-      vec4 simData = texture2D(u_simTexture, 2.*a_Index/u_simResolution-1.);
+      vec4 simData = texture2D(u_texture, 2.*a_Index/u_simResolution-1.);
       vec2 pos = simData.xy;
       gl_Position = vec4(pos, 0.0, 1.0);
       gl_PointSize = 1.0;
@@ -116,14 +116,14 @@
     
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
-    uniform sampler2D u_pheroTexture;
+    uniform sampler2D u_texture;
     uniform float u_evaporationRate;
 
     // write particles to r and g channels, those get cleared
     // diffuse b and w, add r and g to them
     vec4 getPixel(vec2 offset){
-      vec2 particleVal = texture2D(u_pheroTexture, (gl_FragCoord.xy+offset)/u_resolution).xy;
-      vec2 pheroVal = texture2D(u_pheroTexture, (gl_FragCoord.xy+offset)/u_resolution).zw;
+      vec2 particleVal = texture2D(u_texture, (gl_FragCoord.xy+offset)/u_resolution).xy;
+      vec2 pheroVal = texture2D(u_texture, (gl_FragCoord.xy+offset)/u_resolution).zw;
       
       return vec4(0.,0., pheroVal+particleVal);
     }
@@ -171,7 +171,7 @@
     uniform float u_rotationRate;
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
-    uniform sampler2D u_simTexture;
+    uniform sampler2D u_texture;
     uniform sampler2D u_pheroTexture;
     uniform float u_dt;
   
@@ -190,15 +190,15 @@
     }
     
     void main() {
-      vec4 simData = texture2D(u_simTexture, gl_FragCoord.xy/u_simResolution);
+      vec4 simData = texture2D(u_texture, gl_FragCoord.xy/u_simResolution);
       vec2 pos = simData.xy;
       float dir = simData.z; 
 
       float pheroL = getPheroAtAngle(-u_searchAngle, pos, dir);
       float pheroC = getPheroAtAngle(0., pos, dir);
       float pheroR = getPheroAtAngle(u_searchAngle, pos, dir);
-      if (pos.x>1. || pos.x<-1. || pos.y>1. || pos.y<-1.) {
-        //if (pos.x*pos.x+pos.y*pos.y>1.) {
+      //if (pos.x>1. || pos.x<-1. || pos.y>1. || pos.y<-1.) {
+        if (pos.x*pos.x+pos.y*pos.y>1.) {
         float centerDir = atan(-pos.y, -pos.x);
         float delta = mod(centerDir - dir + 3.*M_PI, 2.*M_PI) - M_PI;
         if(delta > 0.){
