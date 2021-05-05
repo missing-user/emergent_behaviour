@@ -28,7 +28,7 @@
       <div class="column">
         <h1>Physarum</h1>
         <p>
-          Physarum is a cool slime mould.
+          Physarum is a cool slime mold.
         </p>
       </div>
     </div>
@@ -39,19 +39,19 @@
       </p>
       <canvas width="1024" height="1024" class="u-full-width" id="canvas"></canvas>
       <label>Search Angle
-        <input type="range" id="searchangle" value=".7" min="0" max="3.14" step="any">
+        <input type="range" id="searchangle" value=".7854" min="0" max="1.6" step="any">
       </label>
       <label>Search Distance
-        <input type="range" id="searchdistance" value="5" min="1" max="30" step="any">
+        <input type="range" id="searchdistance" value="12" min="1" max="30" step="any">
       </label>
       <label>Movement Speed
-        <input type="range" id="movementspeed" value=".1" min="0" max=".4" step="any">
+        <input type="range" id="movementspeed" value="1.1" min=".5" max="2" step="any">
       </label>
       <label>Rotation Rate
-        <input type="range" id="rotationrate" value="2" min="0" max="3.14" step="any">
+        <input type="range" id="rotationrate" value="0.7854" min="0" max="1.6" step="any">
       </label>
       <label>Evaporation Rate
-        <input type="range" id="evaporationrate" value=".95" min="0.8" max="1" step="any">
+        <input type="range" id="evaporationrate" value=".9" min="0.8" max="1" step="any">
       </label>
     </div>
   </div>
@@ -99,13 +99,9 @@
 
   <!-- Particle Render Shader -->
   <script type="x-shader/x-fragment" id="renderShader">
-    precision mediump float;
-    
-    uniform vec2 u_simResolution;
-    uniform vec2 u_resolution;
-      
+    precision mediump float;      
     void main() {
-      gl_FragColor = vec4(1.,0.,0.,1.);
+      gl_FragColor=vec4(1.,0.,0.,1.);
     }
   </script>
 
@@ -116,25 +112,33 @@
     
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
+    uniform vec2 u_mousePos;
     uniform sampler2D u_texture;
     uniform float u_evaporationRate;
 
     // write particles to r and g channels, those get cleared
     // diffuse b and w, add r and g to them
-    vec4 getPixel(vec2 offset){
+    vec2 getPixel(vec2 offset){
       vec2 particleVal = texture2D(u_texture, (gl_FragCoord.xy+offset)/u_resolution).xy;
       vec2 pheroVal = texture2D(u_texture, (gl_FragCoord.xy+offset)/u_resolution).zw;
-      
-      return vec4(0.,0., pheroVal+particleVal);
+      //TODO figure out what the .5 does
+      return vec2(pheroVal + particleVal);
+    }
+
+    float circle(vec2 uv){
+      vec2 dist = uv - u_mousePos;
+      return 1.-smoothstep(0., .1, dot(dist,dist)*4.0);
     }
 
     void main() {
-     vec4 sum = getPixel(vec2(-1.,-1.)) + getPixel(vec2(0.,-1.)) + getPixel(vec2(1.,-1.))+
+     vec2 sum = getPixel(vec2(-1.,-1.)) + getPixel(vec2(0.,-1.)) + getPixel(vec2(1.,-1.))+
                 getPixel(vec2(-1.,0.)) + getPixel(vec2(0.)) + getPixel(vec2(1.,0.))+
                 getPixel(vec2(-1.,1.)) + getPixel(vec2(0.,1.)) + getPixel(vec2(1.,1.));
-     vec4 average = sum/9.;
-
-     gl_FragColor = average*u_evaporationRate;
+     vec2 average = sum/9.;
+     vec2 mouseVal = vec2(0.3,1.)*circle(gl_FragCoord.xy/u_resolution);
+     vec2 particleVal = texture2D(u_texture, (gl_FragCoord.xy)/u_resolution).xy;
+     vec4 color = vec4(particleVal*u_evaporationRate,average*u_evaporationRate + mouseVal);
+     gl_FragColor = clamp(color, 0.01,1.);
     //gl_FragColor = vec4(0.,0.,gl_FragCoord.x / u_resolution.x,1.);
     }
   </script>
@@ -154,7 +158,7 @@
 
     void main() {
       vec2 uv =2.* gl_FragCoord.xy/u_resolution -1.;
-      gl_FragColor = vec4(uv, n2rand(uv).x*2.*M_PI, 1.);
+      gl_FragColor = vec4( n2rand(uv)*4. -2., n2rand(uv*4.).x*2.*M_PI, 1.);
     }
   </script>
 
@@ -173,9 +177,6 @@
     uniform vec2 u_resolution;
     uniform sampler2D u_texture;
     uniform sampler2D u_pheroTexture;
-    uniform float u_dt;
-  
-    uniform float D_a, D_b, f, k;
 
     vec2 n2rand(vec2 uv) {
       return vec2(fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453),
@@ -185,8 +186,8 @@
     float getPheroAtAngle(float a,vec2 pos, float dir){
       dir = mod(dir,2.*M_PI);
       vec2 offset = vec2(cos(dir+a), sin(dir+a))*(u_searchDistance/u_resolution.x);
-      vec4 pheroVal = texture2D(u_pheroTexture,(pos+1.)/2.-offset);
-      return 1.-pheroVal.z;
+      vec4 pheroVal = texture2D(u_pheroTexture,(pos+1.)/2.+offset);
+      return pheroVal.z;
     }
     
     void main() {
@@ -197,37 +198,34 @@
       float pheroL = getPheroAtAngle(-u_searchAngle, pos, dir);
       float pheroC = getPheroAtAngle(0., pos, dir);
       float pheroR = getPheroAtAngle(u_searchAngle, pos, dir);
-      //if (pos.x>1. || pos.x<-1. || pos.y>1. || pos.y<-1.) {
-        if (pos.x*pos.x+pos.y*pos.y>1.) {
+      if (pos.x>1. || pos.x<-1. || pos.y>1. || pos.y<-1.) {
+        //if (pos.x*pos.x+pos.y*pos.y>1.) {
         float centerDir = atan(-pos.y, -pos.x);
         float delta = mod(centerDir - dir + 3.*M_PI, 2.*M_PI) - M_PI;
         if(delta > 0.){
-          dir += u_rotationRate *u_dt;
+          dir += u_rotationRate;
         }else{
-          dir -= u_rotationRate *u_dt;
+          dir -= u_rotationRate;
         }
       }else{
-        if(pheroL < pheroC && pheroR < pheroC){
+        if(pheroC > pheroL && pheroC > pheroR){
           // center highest
         } else if(pheroL > pheroC && pheroR > pheroC){
           //left and right both higher than center
-          if(n2rand(gl_FragCoord.xy/u_resolution).y>.5){
-            dir += u_rotationRate* u_dt;
+          if(n2rand(vec2(dir,u_time)).x>.5){
+            dir += u_rotationRate;
           }else{
-            dir -= u_rotationRate* u_dt;
+            dir -= u_rotationRate;
           }
-        }else 
-        if(pheroL > pheroR){
-          dir -= u_rotationRate* u_dt;
+        }else if(pheroL > pheroR){
+          dir -= u_rotationRate;
         }else if(pheroR > pheroL){
-          dir += u_rotationRate* u_dt;
+          dir += u_rotationRate;
         }
       }
       
-      
-      //dir = u_time*2.*M_PI;
-      vec2 vel = vec2(cos(dir), sin(dir)) * u_speed;
-      gl_FragColor = vec4(pos + vel*u_dt, dir, simData.w);
+      vec2 vel = vec2(cos(dir), sin(dir)) * u_speed / u_resolution.x;
+      gl_FragColor = vec4(pos + vel, dir, simData.w);
     }
   </script>
 

@@ -9,6 +9,7 @@ const minimalVertexInfo = twgl.createBufferInfoFromArrays(gl, {
   a_position: frameVertexCoords,
 });
 
+var mouse = [-1, -1];
 var disabled = false, pause;
 
 // Simulation constants
@@ -57,10 +58,13 @@ function init() {
       diffusor.uniforms = {
         u_resolution: [gl.canvas.width, gl.canvas.height],
         u_simResolution: [simSize, simSize],
+        u_mousePos: mouse,
         u_evaporationRate: getRangeVal('evaporationrate'),
       }
       diffusor.step();
 
+      //gl.enable(gl.BLEND);
+      //gl.blendFunc(gl.ONE, gl.ONE);
       //update simulation
       simulator.uniforms = {
         u_dt: .05,
@@ -74,6 +78,19 @@ function init() {
         u_time: (Date.now() - startTime) / 1000,
       }
       simulator.step();
+      //gl.disable(gl.BLEND);
+
+      // render the texture to the screen
+      gl.useProgram(textureRendererInfo.program);
+      twgl.setBuffersAndAttributes(gl, textureRendererInfo, minimalVertexInfo);
+      twgl.setUniforms(textureRendererInfo, {
+        u_resolution: [gl.canvas.width, gl.canvas.height],
+        u_simResolution: [simSize, simSize],
+        u_texture: diffusor.bufferTexture,
+      });
+      twgl.bindFramebufferInfo(gl);
+      twgl.drawBufferInfo(gl, minimalVertexInfo);
+
 
       // render the current particles
       gl.useProgram(rendererInfo.program);
@@ -86,17 +103,6 @@ function init() {
       });
       twgl.bindFramebufferInfo(gl, diffusor.fb1);
       twgl.drawBufferInfo(gl, pointsVertexInfo, gl.POINTS);
-
-      // render the texture to the screen
-      gl.useProgram(textureRendererInfo.program);
-      twgl.setBuffersAndAttributes(gl, textureRendererInfo, minimalVertexInfo);
-      twgl.setUniforms(textureRendererInfo, {
-        u_resolution: [gl.canvas.width, gl.canvas.height],
-        u_simResolution: [simSize, simSize],
-        u_texture: diffusor.bufferTexture,
-      });
-      twgl.bindFramebufferInfo(gl);
-      twgl.drawBufferInfo(gl, minimalVertexInfo);
     }
     frameId = requestAnimationFrame(animate);
   }
@@ -107,7 +113,7 @@ function init() {
 function initIndices() {
   // uv positions for sprites in the vertex shader 
   // (where in the sim texture do the particles get their simulation data from)
-  const simIndex = new Float32Array(pCount / 4);
+  const simIndex = new Float32Array(pCount * .05);
   for (let x = 0; x < simSize; x++) {
     for (let y = 0; y < simSize; y++) {
       let i = (x * simSize + y) * 2;
@@ -158,6 +164,12 @@ class PingPongShader {
   get bufferTexture() {
     return this.fb1.attachments[0];
   }
+}
+
+window.onmousemove = (e) => {
+  var rect = gl.canvas.getBoundingClientRect();
+  mouse[0] = (e.clientX - rect.left) / gl.canvas.clientWidth;
+  mouse[1] = 1 - (e.clientY - rect.top) / gl.canvas.clientHeight;
 }
 
 function enableFloatTextures(gl) {
