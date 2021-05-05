@@ -141,12 +141,10 @@
     
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
-    uniform sampler2D u_simTexture;
+    uniform vec3 u_pColor;
       
     void main() {
-      vec4 simData = texture2D(u_simTexture, gl_FragCoord.xy/u_resolution);
-      
-      gl_FragColor = vec4(1.);
+      gl_FragColor = vec4(u_pColor, 1.);
     }
   </script>
 

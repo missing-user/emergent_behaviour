@@ -7,6 +7,17 @@ const frameVertexCoords = [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1,
 enableFloatTextures(gl);
 
 var disabled = false, pause;
+var pColor = [0, 0, 0];
+//set the colorscheme
+if (window.matchMedia) {
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
+    pColor = e.matches ? [1, 1, 1] : [0, 0, 0];
+    console.log("theme change detected, setting color to", pColor);
+  });
+  if (window.matchMedia("(prefers-color-scheme: dark)").matches)
+    pColor = [1, 1, 1];
+}
+
 
 // Simulation constants
 var simSize = 1024; // width & height of the simulation textures
@@ -80,7 +91,7 @@ function init() {
 
       //update the sim Texture in renderer
       gl.useProgram(rendererInfo.program);
-      //gl.bindTexture(gl.TEXTURE_2D, simTexture);
+      renderUniforms.u_pColor = pColor;
       twgl.setBuffersAndAttributes(gl, rendererInfo, renderVertexInfo);
       twgl.setUniforms(rendererInfo, renderUniforms);
       twgl.bindFramebufferInfo(gl);
