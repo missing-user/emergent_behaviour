@@ -2,11 +2,10 @@ var canvas = document.getElementById('canvas');
 
 const gl = canvas.getContext("webgl");
 var frameId;
-const frameVertexCoords = [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0];
 enableFloatTextures(gl);
 
 const minimalVertexInfo = twgl.createBufferInfoFromArrays(gl, {
-  a_position: frameVertexCoords,
+  a_position: [-1, -1, 0, 1, -1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, 1, 0],
 });
 
 var mouse = [-1, -1];
@@ -21,7 +20,7 @@ canvas.width = simSize;
 canvas.height = simSize;
 
 function getRangeVal(id) {
-  return document.getElementById(id).value;
+  return parseFloat(document.getElementById(id).value);
 }
 
 function init() {
@@ -113,7 +112,7 @@ function init() {
 function initIndices() {
   // uv positions for sprites in the vertex shader 
   // (where in the sim texture do the particles get their simulation data from)
-  const simIndex = new Float32Array(pCount * .05);
+  const simIndex = new Float32Array(~~(pCount * .25));
   for (let x = 0; x < simSize; x++) {
     for (let y = 0; y < simSize; y++) {
       let i = (x * simSize + y) * 2;
