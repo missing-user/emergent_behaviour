@@ -66,7 +66,8 @@
       <div class="one-half column">
 
         <label>Reset Simulation
-          <button class="u-full-width" onclick="resetAnim()">Reset</button>
+          <button class="u-full-width"
+            onclick="setPreset(document.getElementById('presets').value);init();">Reset</button>
         </label>
         <label>Diffusion rate A
           <input id="daslider" type="range" step="any" min="0.05" max=".3" value=".2">
@@ -126,9 +127,15 @@
     uniform sampler2D renderTexture;
     uniform vec2 resolution;
     uniform float dt;
+    uniform vec2 mouse;
   
     uniform float D_a, D_b, f, k;
     
+    float circle(vec2 uv){
+      vec2 dist = uv - mouse;
+      return 1.-smoothstep(0., .02, dot(dist,dist)*4.0);
+    }
+
     void main() {
       vec2 pos = gl_FragCoord.xy,
         up = pos + vec2(0.0, 1.0),
@@ -145,7 +152,7 @@
         // laplace, equivalent to sum(delta in each direction)
       vec2 delta = vec2(D_a*laplace.r - val.r*val.g*val.g + f*(1. - val.r),
                         D_b*laplace.g + val.r*val.g*val.g - (k + f)*val.g);
-      gl_FragColor = vec4(val + delta * dt, 0., 1.);
+      gl_FragColor = vec4(val + delta * dt, 0., 1.) + vec4(.01,.01,.01,1.)*circle(gl_FragCoord.xy/resolution);
     }
   </script>
 

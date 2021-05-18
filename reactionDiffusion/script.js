@@ -2,6 +2,7 @@ var canvas = document.getElementById('canvas');
 
 const gl = canvas.getContext("webgl");
 var frameId;
+var mouse = [-1, -1];
 enableFloatTextures(gl);
 
 var disabled = false;
@@ -26,7 +27,8 @@ function init() {
     D_a: 0.2,
     D_b: 0.1,
     f: 0.0545,
-    k: 0.062
+    k: 0.062,
+    mouse: mouse,
   };
   gl.useProgram(simulatorInfo.program);
   twgl.setUniforms(simulatorInfo, simUniforms);
@@ -45,6 +47,7 @@ function init() {
     simUniforms.D_b = document.getElementById('dbslider').value;
     simUniforms.f = document.getElementById('fslider').value;
     simUniforms.k = document.getElementById('kslider').value;
+    simUniforms.mouse = mouse;
 
     twgl.setUniforms(simulatorInfo, simUniforms);
     for (var i = 0; i < iterations; i++) {
@@ -64,6 +67,8 @@ function init() {
     twgl.drawBufferInfo(gl, vertexInfo);
     frameId = requestAnimationFrame(animate);
   }
+  if (frameId)
+    window.cancelAnimationFrame(frameId);
   if (!disabled)
     frameId = requestAnimationFrame(animate);
 }
@@ -103,6 +108,17 @@ function newFramebuffer(gl, texture) {
   gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
   return fb;
+}
+
+
+document.addEventListener("touchmove", pointermove, false);
+document.addEventListener("mousemove", pointermove, false);
+function pointermove(e) {
+  if (e.touches)
+    e = e.touches[0]
+  var rect = gl.canvas.getBoundingClientRect();
+  mouse[0] = (e.clientX - rect.left) / gl.canvas.clientWidth;
+  mouse[1] = 1 - (e.clientY - rect.top) / gl.canvas.clientHeight;
 }
 
 function enableFloatTextures(gl) {

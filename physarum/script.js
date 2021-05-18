@@ -165,7 +165,11 @@ class PingPongShader {
   }
 }
 
-window.onmousemove = (e) => {
+document.addEventListener("touchmove", pointermove, false);
+document.addEventListener("mousemove", pointermove, false);
+function pointermove(e) {
+  if (e.touches)
+    e = e.touches[0]
   var rect = gl.canvas.getBoundingClientRect();
   mouse[0] = (e.clientX - rect.left) / gl.canvas.clientWidth;
   mouse[1] = 1 - (e.clientY - rect.top) / gl.canvas.clientHeight;
