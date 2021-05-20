@@ -201,7 +201,7 @@
       float pheroL = getPheroAtAngle(-u_searchAngle, pos, dir);
       float pheroC = getPheroAtAngle(0., pos, dir);
       float pheroR = getPheroAtAngle(u_searchAngle, pos, dir);
-      if (pos.x>1. || pos.x<-1. || pos.y>1. || pos.y<-1.) {
+      /*if (pos.x>1. || pos.x<-1. || pos.y>1. || pos.y<-1.) {
         //if (pos.x*pos.x+pos.y*pos.y>1.) {
         float centerDir = atan(-pos.y, -pos.x);
         float delta = mod(centerDir - dir + 3.*M_PI, 2.*M_PI) - M_PI;
@@ -225,7 +225,7 @@
         }else if(pheroR > pheroL){
           dir += u_rotationRate;
         }
-      }
+      }*/
       
       vec2 vel = vec2(cos(dir), sin(dir)) * u_speed / u_resolution.x;
       gl_FragColor = vec4(pos + vel, dir, simData.w);
