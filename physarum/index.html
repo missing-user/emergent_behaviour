@@ -48,7 +48,7 @@
         <input type="range" id="searchdistance" value="12" min="1" max="30" step="any">
       </label>
       <label>Movement Speed
-        <input type="range" id="movementspeed" value="1.1" min=".5" max="2" step="any">
+        <input type="range" id="movementspeed" value="1.1" min=".1" max="2" step="any">
       </label>
       <label>Rotation Rate
         <input type="range" id="rotationrate" value="0.7854" min="0" max="1.6" step="any">
@@ -71,7 +71,7 @@
 
   <!-- Point Sprite Vertex Shader -->
   <script id="vs_points" type="x-shader/x-vertex">
-    precision mediump float;
+    precision highp float;
 
     attribute vec2 a_Index; // UV index of the sprite
     uniform vec2 u_simResolution;
@@ -79,16 +79,16 @@
     uniform sampler2D u_texture;
 
     void main() {
-      vec4 simData = texture2D(u_texture, 2.*a_Index/u_simResolution-1.);
+      vec4 simData = texture2D(u_texture, a_Index/u_simResolution);
       vec2 pos = simData.xy;
-      gl_Position = vec4(pos, 0.0, 1.0);
+      gl_Position = vec4(pos*2.-1., 0.0, 1.0);
       gl_PointSize = 1.0;
     }
   </script>
 
   <!-- Texture Render Shader -->
   <script type="x-shader/x-fragment" id="textureRenderShader">
-    precision mediump float;
+    precision highp float;
     
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
@@ -102,16 +102,18 @@
 
   <!-- Particle Render Shader -->
   <script type="x-shader/x-fragment" id="renderShader">
-    precision mediump float;      
+    precision highp float;      
     void main() {
-      gl_FragColor=vec4(1.,0.,0.,1.);
+      float c = 1. - length( .5 - gl_PointCoord.xy );
+      gl_FragColor=vec4(c, 0.,0.,1.);
+      //      gl_FragColor=vec4(1., 0., 0., 1.);
     }
   </script>
 
 
   <!-- Pheromone Diffusion Shader -->
   <script type="x-shader/x-fragment" id="diffusionShader">
-    precision mediump float;
+    precision highp float;
     
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
@@ -139,16 +141,18 @@
                 getPixel(vec2(-1.,1.)) + getPixel(vec2(0.,1.)) + getPixel(vec2(1.,1.));
      vec2 average = sum/9.;
      vec2 mouseVal = vec2(0.3,1.)*circle(gl_FragCoord.xy/u_resolution);
+     //not strictly necessary to evaporate the original particle trail
      vec2 particleVal = texture2D(u_texture, (gl_FragCoord.xy)/u_resolution).xy;
-     vec4 color = vec4(particleVal*u_evaporationRate,average*u_evaporationRate + mouseVal);
-     gl_FragColor = clamp(color, 0.01,1.);
-    //gl_FragColor = vec4(0.,0.,gl_FragCoord.x / u_resolution.x,1.);
+     vec4 color = vec4(0.,0., average*u_evaporationRate + mouseVal);
+     gl_FragColor = clamp(color, 0.001,1.);
+    //override, just show particles
+    gl_FragColor = vec4(particleVal.x*.8,color.gb,1.);
     }
   </script>
 
   <!-- inital particle attributes Shader -->
   <script type="x-shader/x-fragment" id="initShader">
-    precision mediump float;
+    precision highp float;
     #define M_PI 3.141592653589793
     
     uniform vec2 u_simResolution;
@@ -160,14 +164,15 @@
     }
 
     void main() {
-      vec2 uv =2.* gl_FragCoord.xy/u_resolution -1.;
-      gl_FragColor = vec4( n2rand(uv)*4. -2., n2rand(uv*4.).x*2.*M_PI, 1.);
+      vec2 uv = 2.* gl_FragCoord.xy/u_resolution -1.;
+      // r,g are x and y coordinates; b stores the direction
+      gl_FragColor = vec4( n2rand(uv), n2rand(uv*4.).x*2.*M_PI, 1.);
     }
   </script>
 
   <!-- update positions and velocities Shader -->
   <script type="x-shader/x-fragment" id="simShader">
-    precision mediump float;
+    precision highp float;
 
     #define M_PI 3.141592653589793
 
@@ -178,6 +183,7 @@
     uniform float u_rotationRate;
     uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
+    //u_texture is the data texture wit particle positions and velocities
     uniform sampler2D u_texture;
     uniform sampler2D u_pheroTexture;
 
@@ -189,7 +195,7 @@
     float getPheroAtAngle(float a,vec2 pos, float dir){
       dir = mod(dir,2.*M_PI);
       vec2 offset = vec2(cos(dir+a), sin(dir+a))*(u_searchDistance/u_resolution.x);
-      vec4 pheroVal = texture2D(u_pheroTexture,(pos+1.)/2.+offset);
+      vec4 pheroVal = texture2D(u_pheroTexture, pos+offset);
       return pheroVal.z;
     }
     
@@ -201,33 +207,37 @@
       float pheroL = getPheroAtAngle(-u_searchAngle, pos, dir);
       float pheroC = getPheroAtAngle(0., pos, dir);
       float pheroR = getPheroAtAngle(u_searchAngle, pos, dir);
-      /*if (pos.x>1. || pos.x<-1. || pos.y>1. || pos.y<-1.) {
+      if (pos.x>1. || pos.x<0. || pos.y>1. || pos.y<0.) {
         //if (pos.x*pos.x+pos.y*pos.y>1.) {
-        float centerDir = atan(-pos.y, -pos.x);
+        float centerDir = atan(-pos.y+.5, -pos.x+.5);
         float delta = mod(centerDir - dir + 3.*M_PI, 2.*M_PI) - M_PI;
         if(delta > 0.){
+          dir += .1;
+        }else{
+          dir -= .1;
+        }
+      }else{
+      }
+
+      
+      //rotate particles towards the feromone gradient
+      if(pheroC > pheroL && pheroC > pheroR){
+        // center highest
+      } else if(pheroL > pheroC && pheroR > pheroC){
+        //left and right both higher than center
+        if(n2rand(vec2(dir,u_time)).x>.5){
           dir += u_rotationRate;
         }else{
           dir -= u_rotationRate;
         }
-      }else{
-        if(pheroC > pheroL && pheroC > pheroR){
-          // center highest
-        } else if(pheroL > pheroC && pheroR > pheroC){
-          //left and right both higher than center
-          if(n2rand(vec2(dir,u_time)).x>.5){
-            dir += u_rotationRate;
-          }else{
-            dir -= u_rotationRate;
-          }
-        }else if(pheroL > pheroR){
-          dir -= u_rotationRate;
-        }else if(pheroR > pheroL){
-          dir += u_rotationRate;
-        }
-      }*/
+      }else if(pheroL > pheroR){
+        dir -= u_rotationRate;
+      }else if(pheroR > pheroL){
+        dir += u_rotationRate;
+      }
       
       vec2 vel = vec2(cos(dir), sin(dir)) * u_speed / u_resolution.x;
+      //vec2 newPos = mod(pos + vel,1.);
       gl_FragColor = vec4(pos + vel, dir, simData.w);
     }
   </script>

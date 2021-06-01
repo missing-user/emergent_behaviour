@@ -79,7 +79,7 @@ function init() {
       simulator.step();
       //gl.disable(gl.BLEND);
 
-      // render the texture to the screen
+      // render the pheromone texture to the screen
       gl.useProgram(textureRendererInfo.program);
       twgl.setBuffersAndAttributes(gl, textureRendererInfo, minimalVertexInfo);
       twgl.setUniforms(textureRendererInfo, {
@@ -91,7 +91,7 @@ function init() {
       twgl.drawBufferInfo(gl, minimalVertexInfo);
 
 
-      // render the current particles
+      // render the current particles as red dots
       gl.useProgram(rendererInfo.program);
       twgl.setBuffersAndAttributes(gl, rendererInfo, pointsVertexInfo);
       twgl.setUniforms(rendererInfo, {
@@ -116,8 +116,8 @@ function initIndices() {
   for (let x = 0; x < simSize; x++) {
     for (let y = 0; y < simSize; y++) {
       let i = (x * simSize + y) * 2;
-      simIndex[i] = x;
-      simIndex[i + 1] = y;
+      simIndex[i] = x * 2 - 1;
+      simIndex[i + 1] = y * 2 - 1;
     }
   }
   return simIndex;
