@@ -20,10 +20,16 @@
     <a href="../">Back to Overview</a>
     <div class="row">
       <h1>Cellular Atomata</h1>
-      <p>One of the most popular examples of complex behaviour emerging from a simple ruleset is probably <a
-          href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Conways Game of Life</a>. It is just one example
-        of cellular automata. Usually these consist of a grid of cells, that change their value depending on their
-        neighbours. In the following demo, I have implemented a cellular automaton using WebGL Shaders.
+      <p>One of the most popular examples of cellular automata is probably
+        <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Conways Game of Life</a>. In Conways Game of
+        Life automaton, a cell can be born if there are exactly 3 neighbouring cells alive. An alive cell can die and
+        from overpopulation if there are more than 3 alive, neighbouring cells or starve from underpopulation if there
+        are less than 2. The rules for automata can be written in the MCell notation as B3/S23 (birth 3, survival 2 or
+        3). There are many more <a href="https://en.wikipedia.org/wiki/Life-like_cellular_automaton">interesting
+          cellular automata</a> with rules like B4678/S35678, B36/S23 and even the simple B2/S.
+        <br>
+        Type your favorite ruleset into the textbox and watch the cells evolve! The demo uses a Ping Pong WebGL Shader
+        model for performant parallel computation.
       </p>
     </div>
 
@@ -31,7 +37,16 @@
       <p id="webglWarning" style="display: none;">
         <b style="color: red;">Due to WebGL issues, the simulation does not work on your device</b>
       </p>
+      <input type="text" name="rule" value="B3S23" oninput="setRules(value)" placeholder="rule">
       <button onclick="reinit()">change pattern</button>
+      <style>
+        canvas {
+          image-rendering: -moz-crisp-edges;
+          image-rendering: -webkit-crisp-edges;
+          image-rendering: pixelated;
+          image-rendering: crisp-edges;
+        }
+      </style>
       <canvas width="1024" height="1024" class="u-full-width" id="canvas"></canvas>
     </div>
 
@@ -82,6 +97,10 @@
         val = atan(uv.x, uv.y);
       }else if(u_mode == 2){
         val = uv.x/uv.y + uv.x*5.;
+      }else if(u_mode == 3){
+        val = sin(length(uv)*18.)*1.5;
+      }else if(u_mode == 4){
+        val = 1.-smoothstep(0.1,0.11,length(uv));
       }else{
         val = n2rand(uv).x*1.2;
       }
@@ -98,6 +117,8 @@
     uniform sampler2D u_texture;
     uniform vec2 u_resolution;
     uniform vec2 u_mousePos;
+    uniform int u_birth[9];
+    uniform int u_survival[9];
 
     int getPixel(vec2 offset){
       float particleVal = texture2D(u_texture, (gl_FragCoord.xy+offset)/u_resolution).x;
@@ -120,32 +141,12 @@
                   getPixel(vec2(-1.,0.)) + getPixel(vec2(1.,0.))+
                   getPixel(vec2(-1.,1.)) + getPixel(vec2(0.,1.)) + getPixel(vec2(1.,1.));
 
-     /* if(cellValue==0){
-        //dead cell
-        if(neighbours==3 || neighbours==6|| neighbours==8|| neighbours==7){
-          cellValue = 1;
-        }
-      }else{
-        //living cell
-        if(!( neighbours ==2|| neighbours ==5)){
-          cellValue = 1;
-        }else{
-          cellValue = 0;
-        }
-      }*/
-
-      //conway
-      if(cellValue==0){
-        //dead cell
-        if(neighbours==3){
-          cellValue =1;
-        }
-      }else{
-        //living cell
-        if(!(neighbours==2 || neighbours ==3)){ // not survival conditions
-          cellValue = 0;
+      for(int i = 0; i<9; i++){
+        if(i==neighbours){
+          cellValue = (1-cellValue)*u_birth[i] + cellValue*u_survival[i];
         }
       }
+      
       gl_FragColor = vec4(float(cellValue+int(circle(gl_FragCoord.xy/u_resolution)*2.)));
     }
   </script>

@@ -5,7 +5,7 @@ var frameId;
 
 var disabled = false, pause;
 var pColor = [0, 0, 0];
-var mouse = [-1, -1];
+const mouse = [-1, -1];
 //set the colorscheme
 if (window.matchMedia) {
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
@@ -16,15 +16,29 @@ if (window.matchMedia) {
     pColor = [1, 1, 1];
 }
 
+let rect = canvas.getBoundingClientRect()
+let closestPower2 = Math.ceil(Math.log2(rect.width * window.devicePixelRatio));
+canvas.width = canvas.height = 2 ** closestPower2;
 
-// Simulation constants
-var simSize = 1024; // width & height of the simulation textures
-if (window.devicePixelRatio > 2)
-  simSize = 512;
-var pCount = simSize * simSize;
-canvas.width = simSize;
-canvas.height = simSize;
+const birthRule = [0, 0, 0, 1, 0, 0, 0, 0, 0], survivalRule = [0, 0, 1, 1, 0, 0, 0, 0, 0];
+function setRules(ruleString) {
+  for (let i = 0; i < 9; i++)
+    birthRule[i] = survivalRule[i] = 0
 
+  let reB = /[bB]\d{0,9}/
+  let res = ruleString.match(reB)
+  if (res)
+    for (let i = 1; i < res[0].length; i++)
+      birthRule[res[0][i]] = 1
+
+
+  let reS = /[sS]\d{0,9}/
+  res = ruleString.match(reS)
+  if (res)
+    for (let i = 1; i < res[0].length; i++)
+      survivalRule[res[0][i]] = 1
+}
+setRules("B3S23")
 
 function init() {  //initialize the shaders
   const initInfo = twgl.createProgramInfo(gl, ['vs', 'initShader']);
@@ -39,8 +53,9 @@ function init() {  //initialize the shaders
   pingpong.uniforms = {
     u_resolution: [gl.canvas.width, gl.canvas.height],
     u_mousePos: mouse,
+    u_birth: birthRule,
+    u_survival: survivalRule,
   };
-
 
   //init vertex info
   const minimalVertexInfo = twgl.createBufferInfoFromArrays(gl, {
@@ -63,8 +78,7 @@ function init() {  //initialize the shaders
   var currentMode = 0;
   window.reinit = () => {
     currentMode++;
-    console.log(currentMode);
-    initParticleTexture(currentMode % 3);
+    initParticleTexture(currentMode % 5);
   };
 
   initParticleTexture();
@@ -101,8 +115,8 @@ class PingPongShader {
 
     this.shaderInfo = twgl.createProgramInfo(gl, [vs, fs]);
     //initialize the buffer textures
-    const attachments = [
-      { format: gl.RGB, /*type: gl.UNSIGNED_INT,*/ wrapS: gl.MIRRORED_REPEAT, wrapT: gl.MIRRORED_REPEAT },
+    const attachments = [//LUMINANCE
+      { format: gl.RGB, wrapS: gl.MIRRORED_REPEAT, wrapT: gl.MIRRORED_REPEAT },
     ];
     this.fb1 = twgl.createFramebufferInfo(gl, attachments);
     this.fb2 = twgl.createFramebufferInfo(gl, attachments);
@@ -127,7 +141,6 @@ class PingPongShader {
   }
 }
 
-
 //pause simulation when invisible for performance
 window.onscroll = () => {
   var rect = gl.canvas.getBoundingClientRect();
@@ -144,5 +157,4 @@ function pointermove(e) {
   mouse[0] = (e.clientX - rect.left) / gl.canvas.clientWidth;
   mouse[1] = 1 - (e.clientY - rect.top) / gl.canvas.clientHeight;
 }
-
 init();

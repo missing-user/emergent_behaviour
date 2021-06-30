@@ -13,6 +13,11 @@ blockquote {
   border-left: solid;
 }
 
+input[type="text"] {
+  display: block;
+  color: inherit;
+}
+
 .headerLinks {
   display: flex;
   justify-content: space-between;
