@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title>Cellular Atomata</title>
+  <!-- MOBILE––––––––––––––––––––––– -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- CSS––––––––––––––––––––––– -->
+  <link rel="stylesheet" href="../shared/css/normalize.css">
+  <link rel="stylesheet" href="../shared/css/skeleton.css">
+  <link rel="stylesheet" href="../shared/css/darkskelleton.css" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="../shared/css/style.css">
+  <link rel="icon" type="image/png" href="/images/favicon.png">
+</head>
+
+<body>
+  <div class="container" style="margin-top: 1em;">
+    <a href="../">Back to Overview</a>
+    <div class="row">
+      <h1>Cellular Atomata</h1>
+      <p>One of the most popular examples of complex behaviour emerging from a simple ruleset is probably <a
+          href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Conways Game of Life</a>. It is just one example
+        of cellular automata. Usually these consist of a grid of cells, that change their value depending on their
+        neighbours. In the following demo, I have implemented a cellular automaton using WebGL Shaders.
+      </p>
+    </div>
+
+    <div class="row">
+      <p id="webglWarning" style="display: none;">
+        <b style="color: red;">Due to WebGL issues, the simulation does not work on your device</b>
+      </p>
+      <canvas width="1024" height="1024" class="u-full-width" id="canvas"></canvas>
+      <button onclick="reinit()">restart</button>
+    </div>
+
+  </div>
+
+  <!-- Minimal Vertex Shader -->
+  <script id="vs" type="x-shader/x-vertex">
+    attribute vec4 a_position;
+    void main() {
+      gl_Position = a_position;
+    }
+  </script>
+
+  <!-- Texture Render Shader -->
+  <script type="x-shader/x-fragment" id="textureRenderShader">
+      precision highp float;
+      
+      uniform vec2 u_resolution;
+      uniform vec3 u_pColor;
+      uniform sampler2D u_texture;
+        
+      void main() {
+        vec4 texValue = texture2D(u_texture, gl_FragCoord.xy/u_resolution);
+        gl_FragColor = vec4(texValue.x*u_pColor, texValue.x);
+      }
+    </script>
+
+
+  <!-- inital particle attributes Shader -->
+  <script type="x-shader/x-fragment" id="initShader">
+    precision mediump float;
+    #define M_PI 3.141592653589793
+    
+    uniform vec2 u_resolution;
+    uniform int u_mode;
+      
+    vec2 n2rand(vec2 uv) {
+      return vec2(fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453),
+        fract(sin(dot(uv.xy * 1.61803, vec2(12.9898, 78.233))) * 43758.5453));
+    }
+
+    void main() {
+      vec2 uv = 2.* gl_FragCoord.xy/u_resolution -1.;
+      //initial positions are in a grid, initial orientation is given by the blue channel [0,2pi]
+      float val;
+      //for some reason switch wasn't working
+      if(u_mode == 1){
+        val = atan(uv.x, uv.y);
+      }else if(u_mode == 2){
+        val = uv.x/uv.y + uv.x*5.;
+      }else{
+        val = n2rand(uv).x*5.;
+      }
+
+      gl_FragColor = vec4(val);
+    }
+  </script>
+
+  <!-- update positions and velocities Shader -->
+  <script type="x-shader/x-fragment" id="simShader">
+    precision mediump float;
+
+    uniform float u_time;
+    uniform sampler2D u_texture;
+    uniform vec2 u_resolution;
+
+    int getPixel(vec2 offset){
+      float particleVal = texture2D(u_texture, (gl_FragCoord.xy+offset)/u_resolution).x;
+      //TODO figure out what the .5 does
+      return int(particleVal);
+    }
+    
+    void main() {
+     int cellValue = getPixel(vec2(0.));
+     int neighbours =  getPixel(vec2(-1.,-1.)) + getPixel(vec2(0.,-1.)) + getPixel(vec2(1.,-1.))+
+                  getPixel(vec2(-1.,0.)) + getPixel(vec2(1.,0.))+
+                  getPixel(vec2(-1.,1.)) + getPixel(vec2(0.,1.)) + getPixel(vec2(1.,1.));
+
+      if(cellValue==0){
+        //dead cell
+        if(neighbours==3){
+          cellValue =1;
+        }
+      }else{
+        if(neighbours < 2){
+          cellValue = 0;
+        }else if(neighbours>3){
+          cellValue = 0;
+        }else{
+          cellValue =1;
+        }
+      }
+      gl_FragColor = vec4(float(cellValue));
+    }
+  </script>
+
+  <script type="text/javascript" src="../shared/twgl.min.js"></script>
+  <script type="text/javascript" src="script.js"></script>
+</body>
+<script>var cfla = document.createElement('script'); cfla.defer = true; cfla.src = 'https://static.cloudflareinsights.com/beacon.min.js'; cfla.setAttribute("data-cf-beacon", '{"token": "f9f51233f11041a194c4d5f4511d8282"}'); if (!localStorage.getItem("devmode")) document.body.appendChild(cfla)</script>
+
+</html>
