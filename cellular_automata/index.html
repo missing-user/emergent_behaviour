@@ -83,7 +83,7 @@
       }else if(u_mode == 2){
         val = uv.x/uv.y + uv.x*5.;
       }else{
-        val = n2rand(uv).x*5.;
+        val = n2rand(uv).x*1.2;
       }
 
       gl_FragColor = vec4(val);
@@ -97,11 +97,21 @@
     uniform float u_time;
     uniform sampler2D u_texture;
     uniform vec2 u_resolution;
+    uniform vec2 u_mousePos;
 
     int getPixel(vec2 offset){
       float particleVal = texture2D(u_texture, (gl_FragCoord.xy+offset)/u_resolution).x;
       //TODO figure out what the .5 does
       return int(particleVal);
+    }
+    float n2rand(vec2 uv) {
+      uv = uv + u_time;
+      return fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453)* fract(sin(dot(uv.xy * 1.61803, vec2(12.9898, 78.233))) * 43758.5453);
+    }
+
+    float circle(vec2 uv){
+      vec2 dist = uv - u_mousePos;
+      return n2rand(uv)*(1.-smoothstep(.005, .01, dot(dist,dist)));
     }
     
     void main() {
@@ -110,21 +120,33 @@
                   getPixel(vec2(-1.,0.)) + getPixel(vec2(1.,0.))+
                   getPixel(vec2(-1.,1.)) + getPixel(vec2(0.,1.)) + getPixel(vec2(1.,1.));
 
+     /* if(cellValue==0){
+        //dead cell
+        if(neighbours==3 || neighbours==6|| neighbours==8|| neighbours==7){
+          cellValue = 1;
+        }
+      }else{
+        //living cell
+        if(!( neighbours ==2|| neighbours ==5)){
+          cellValue = 1;
+        }else{
+          cellValue = 0;
+        }
+      }*/
+
+      //conway
       if(cellValue==0){
         //dead cell
         if(neighbours==3){
           cellValue =1;
         }
       }else{
-        if(neighbours < 2){
+        //living cell
+        if(!(neighbours==2 || neighbours ==3)){ // not survival conditions
           cellValue = 0;
-        }else if(neighbours>3){
-          cellValue = 0;
-        }else{
-          cellValue =1;
         }
       }
-      gl_FragColor = vec4(float(cellValue));
+      gl_FragColor = vec4(float(cellValue+int(circle(gl_FragCoord.xy/u_resolution)*2.)));
     }
   </script>
 

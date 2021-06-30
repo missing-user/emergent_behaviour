@@ -5,6 +5,7 @@ var frameId;
 
 var disabled = false, pause;
 var pColor = [0, 0, 0];
+var mouse = [-1, -1];
 //set the colorscheme
 if (window.matchMedia) {
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", e => {
@@ -28,11 +29,7 @@ canvas.height = simSize;
 function init() {  //initialize the shaders
   const initInfo = twgl.createProgramInfo(gl, ['vs', 'initShader']);
   const rendererInfo = twgl.createProgramInfo(gl, ['vs', 'textureRenderShader']);
-  var pingpong = new PingPongShader('vs', 'simShader', {
-    uniforms: {
-      u_rules: new Float32Array([0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,])
-    }
-  });
+  var pingpong = new PingPongShader('vs', 'simShader');
 
   // init uniforms
   const renderUniforms = {
@@ -41,7 +38,7 @@ function init() {  //initialize the shaders
   }
   pingpong.uniforms = {
     u_resolution: [gl.canvas.width, gl.canvas.height],
-    u_speed: .2,
+    u_mousePos: mouse,
   };
 
 
@@ -137,5 +134,15 @@ window.onscroll = () => {
   pause = (0 > rect.top + gl.canvas.offsetHeight)
 }
 
+
+document.addEventListener("touchmove", pointermove, false);
+document.addEventListener("mousemove", pointermove, false);
+function pointermove(e) {
+  if (e.touches)
+    e = e.touches[0]
+  var rect = gl.canvas.getBoundingClientRect();
+  mouse[0] = (e.clientX - rect.left) / gl.canvas.clientWidth;
+  mouse[1] = 1 - (e.clientY - rect.top) / gl.canvas.clientHeight;
+}
 
 init();
