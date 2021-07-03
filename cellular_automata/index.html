@@ -82,7 +82,9 @@
     
     uniform vec2 u_resolution;
     uniform int u_mode;
-      
+    uniform sampler2D u_initTexture;
+    uniform vec2 u_textureResolution;
+
     vec2 n2rand(vec2 uv) {
       return vec2(fract(sin(dot(uv.xy, vec2(12.9898, 78.233))) * 43758.5453),
         fract(sin(dot(uv.xy * 1.61803, vec2(12.9898, 78.233))) * 43758.5453));
@@ -100,7 +102,7 @@
       }else if(u_mode == 3){
         val = sin(length(uv)*18.)*1.5;
       }else if(u_mode == 4){
-        val = 1.-smoothstep(0.1,0.11,length(uv));
+        val = 1.-smoothstep(0.2,0.21,length(uv));
       }else{
         val = n2rand(uv).x*1.2;
       }

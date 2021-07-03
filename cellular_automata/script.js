@@ -17,7 +17,7 @@ if (window.matchMedia) {
 }
 
 let rect = canvas.getBoundingClientRect()
-let closestPower2 = Math.ceil(Math.log2(rect.width * window.devicePixelRatio));
+let closestPower2 = Math.floor(Math.log2(rect.width * window.devicePixelRatio));
 canvas.width = canvas.height = 2 ** closestPower2;
 
 const birthRule = [0, 0, 0, 1, 0, 0, 0, 0, 0], survivalRule = [0, 0, 1, 1, 0, 0, 0, 0, 0];
@@ -116,7 +116,7 @@ class PingPongShader {
     this.shaderInfo = twgl.createProgramInfo(gl, [vs, fs]);
     //initialize the buffer textures
     const attachments = [//LUMINANCE
-      { format: gl.RGB, wrapS: gl.MIRRORED_REPEAT, wrapT: gl.MIRRORED_REPEAT },
+      { format: gl.RGB, wrapS: gl.REPEAT, wrapT: gl.REPEAT },
     ];
     this.fb1 = twgl.createFramebufferInfo(gl, attachments);
     this.fb2 = twgl.createFramebufferInfo(gl, attachments);
@@ -150,11 +150,21 @@ window.onscroll = () => {
 
 document.addEventListener("touchmove", pointermove, false);
 document.addEventListener("mousemove", pointermove, false);
+document.addEventListener("pointerdown", (e) => { mouseDown = true; pointermove(e) }, false);
+document.addEventListener("pointerup", (e) => { mouseDown = false; mouse[0] = mouse[1] = -5 }, false);
+
+var mouseDown;
+
 function pointermove(e) {
   if (e.touches)
     e = e.touches[0]
-  var rect = gl.canvas.getBoundingClientRect();
-  mouse[0] = (e.clientX - rect.left) / gl.canvas.clientWidth;
-  mouse[1] = 1 - (e.clientY - rect.top) / gl.canvas.clientHeight;
+
+  if (mouseDown) {
+    var rect = gl.canvas.getBoundingClientRect();
+    mouse[0] = (e.clientX - rect.left) / gl.canvas.clientWidth;
+    if (Math.abs(mouse[0]) > 1) mouse[0] = -5
+    mouse[1] = 1 - (e.clientY - rect.top) / gl.canvas.clientHeight;
+    if (Math.abs(mouse[1]) > 1) mouse[1] = -5
+  }
 }
 init();
