@@ -46,7 +46,6 @@ function init() {
   twgl.setBuffersAndAttributes(gl, initInfo, minimalVertexInfo);
   twgl.setUniforms(initInfo, {
     u_resolution: [gl.canvas.width, gl.canvas.height],
-    u_simResolution: [simSize, simSize],
   });
   twgl.bindFramebufferInfo(gl, simulator.fb1);
   twgl.drawBufferInfo(gl, minimalVertexInfo);
@@ -56,7 +55,6 @@ function init() {
       //diffuse pheromones
       diffusor.uniforms = {
         u_resolution: [gl.canvas.width, gl.canvas.height],
-        u_simResolution: [simSize, simSize],
         u_mousePos: mouse,
         u_evaporationRate: getRangeVal('evaporationrate'),
       }
@@ -68,7 +66,6 @@ function init() {
       simulator.uniforms = {
         u_dt: .05,
         u_resolution: [gl.canvas.width, gl.canvas.height],
-        u_simResolution: [simSize, simSize],
         u_searchDistance: getRangeVal('searchdistance'),
         u_speed: getRangeVal('movementspeed'),
         u_rotationRate: getRangeVal('rotationrate'),
@@ -84,7 +81,6 @@ function init() {
       twgl.setBuffersAndAttributes(gl, textureRendererInfo, minimalVertexInfo);
       twgl.setUniforms(textureRendererInfo, {
         u_resolution: [gl.canvas.width, gl.canvas.height],
-        u_simResolution: [simSize, simSize],
         u_texture: diffusor.bufferTexture,
       });
       twgl.bindFramebufferInfo(gl);
@@ -96,7 +92,6 @@ function init() {
       twgl.setBuffersAndAttributes(gl, rendererInfo, pointsVertexInfo);
       twgl.setUniforms(rendererInfo, {
         u_resolution: [gl.canvas.width, gl.canvas.height],
-        u_simResolution: [simSize, simSize],
         u_texture: simulator.bufferTexture,
         u_time: (Date.now() - startTime) / 500,
       });

@@ -74,12 +74,11 @@
     precision highp float;
 
     attribute vec2 a_Index; // UV index of the sprite
-    uniform vec2 u_simResolution;
     uniform vec2 u_resolution; // width/height of screen
     uniform sampler2D u_texture;
 
     void main() {
-      vec4 simData = texture2D(u_texture, a_Index/u_simResolution);
+      vec4 simData = texture2D(u_texture, a_Index/u_resolution);
       vec2 pos = simData.xy;
       gl_Position = vec4(pos*2.-1., 0.0, 1.0);
       gl_PointSize = 1.0;
@@ -90,7 +89,6 @@
   <script type="x-shader/x-fragment" id="textureRenderShader">
     precision highp float;
     
-    uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
     uniform sampler2D u_texture;
       
@@ -104,9 +102,9 @@
   <script type="x-shader/x-fragment" id="renderShader">
     precision highp float;      
     void main() {
-      float c = 1. - length( .5 - gl_PointCoord.xy );
-      gl_FragColor=vec4(c, 0.,0.,1.);
-      //      gl_FragColor=vec4(1., 0., 0., 1.);
+      //float c = 1. - length( .5 - gl_PointCoord.xy );
+      //gl_FragColor=vec4(c, 0.,0.,1.);
+            gl_FragColor=vec4(1., 0., 0., 1.);
     }
   </script>
 
@@ -115,7 +113,6 @@
   <script type="x-shader/x-fragment" id="diffusionShader">
     precision highp float;
     
-    uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
     uniform vec2 u_mousePos;
     uniform sampler2D u_texture;
@@ -132,7 +129,7 @@
 
     float circle(vec2 uv){
       vec2 dist = uv - u_mousePos;
-      return 1.-smoothstep(0., .1, dot(dist,dist)*4.0);
+      return 1.-smoothstep(0., .05, dot(dist,dist)*4.0);
     }
 
     void main() {
@@ -140,7 +137,7 @@
                 getPixel(vec2(-1.,0.)) + getPixel(vec2(0.)) + getPixel(vec2(1.,0.))+
                 getPixel(vec2(-1.,1.)) + getPixel(vec2(0.,1.)) + getPixel(vec2(1.,1.));
      vec2 average = sum/9.;
-     vec2 mouseVal = vec2(0.3,1.)*circle(gl_FragCoord.xy/u_resolution);
+     vec2 mouseVal = vec2(0.1,1.)*circle(gl_FragCoord.xy/u_resolution);
      //not strictly necessary to evaporate the original particle trail
      vec2 particleVal = texture2D(u_texture, (gl_FragCoord.xy)/u_resolution).xy;
      vec4 color = vec4(0.,0., average*u_evaporationRate + mouseVal);
@@ -155,7 +152,6 @@
     precision highp float;
     #define M_PI 3.141592653589793
     
-    uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
       
     vec2 n2rand(vec2 uv) {
@@ -181,7 +177,6 @@
     uniform float u_searchAngle;
     uniform float u_searchDistance;
     uniform float u_rotationRate;
-    uniform vec2 u_simResolution;
     uniform vec2 u_resolution;
     //u_texture is the data texture wit particle positions and velocities
     uniform sampler2D u_texture;
@@ -200,7 +195,7 @@
     }
     
     void main() {
-      vec4 simData = texture2D(u_texture, gl_FragCoord.xy/u_simResolution);
+      vec4 simData = texture2D(u_texture, gl_FragCoord.xy/u_resolution);
       vec2 pos = simData.xy;
       float dir = simData.z; 
 

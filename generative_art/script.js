@@ -9,7 +9,8 @@ const R = new SeededRandom(seed)
 
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
-const NUM_POINTS = 2 ** Math.floor(6 + R.random() * 8);
+const exponent = Math.floor(6 + R.random() * 8)
+const NUM_POINTS = 2 ** exponent;
 var remainingSteps = 2 ** Math.floor(9 + R.random() * 4);
 
 document.getElementById('age').textContent = 'age: ' + remainingSteps;
@@ -27,7 +28,7 @@ class vertex {
     if (vy == undefined)
       this.vy = hrandom();
     if (w == undefined)
-      this.w = R.random() * 6;
+      this.w = R.random() * (10 - exponent / 2);
   }
 }
 
@@ -86,8 +87,7 @@ function generatePoints(seed) {
 var alpha = .02;
 //draw all points with a variable alpha
 function drawPoints() {
-  c.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-
+  c.globalAlpha = alpha;
   //draw dots
   for (const point of points) {
     c.beginPath();
@@ -103,20 +103,17 @@ function drawPoints() {
 
 const wind = { vx: 0, vy: 0 };
 //update all points
-var sumVx = 0;
 function updatePoints() {
   remainingSteps--;
   for (const point of points) {
-    //point.x += point.vx;
+    point.x += point.vx;
     point.y += point.vy;
-    point.vx = hrandom() + wind.vx;
+    point.vx = wind.vx;
     point.vy = hrandom() + wind.vy;
-    sumVx += point.vx - wind.vx;
-    //point.w *= .999;
+    //point.w *= .997;
   }
-  sumVx /= NUM_POINTS;
   drawPoints();
-  wind.vx += sumVx;
+  //wind.vx += hrandom() * 1e-3;
   wind.vy += hrandom() * .05;
   if (remainingSteps > 0)
     requestAnimationFrame(updatePoints);
@@ -127,8 +124,18 @@ function updatePoints() {
 
 generatePoints(R.random() * 5)
 //prepare the canvas
-c.fillStyle = '#111';
-c.fillRect(0, 0, WIDTH, HEIGHT);
+//low chance to have a bright background with dark strokes
+if (R.random() < .05) {
+  c.fillStyle = `hsl(${R.random() * 360},${R.random() * 15}%,92%)`;
+  document.body.style.background = c.fillStyle;
+  c.fillRect(0, 0, WIDTH, HEIGHT);
+  c.fillStyle = '#000';
+} else {
+  c.fillStyle = `hsl(${R.random() * 360},${R.random() * 100}%,8%)`;
+  document.body.style.background = c.fillStyle;
+  c.fillRect(0, 0, WIDTH, HEIGHT);
+  c.fillStyle = '#fff';
+}
 
 console.log(remainingSteps);
 requestAnimationFrame(updatePoints);
