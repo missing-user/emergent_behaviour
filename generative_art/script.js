@@ -1,12 +1,22 @@
 var canvas = document.getElementById('canvas');
 const c = canvas.getContext("2d");
+
+var seedQuery = location.search.substring(6);
+var seed = seedQuery ? seedQuery : Math.random().toString(36).substring(3)
+document.getElementById('seed').textContent = seed;
+document.getElementById('seed').href = '?seed=' + seed;
+const R = new SeededRandom(seed)
+
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
-var res = Math.floor(6 + Math.random() * 8);
-const NUM_POINTS = 2 ** res;
+const NUM_POINTS = 2 ** Math.floor(6 + R.random() * 8);
+var remainingSteps = 2 ** Math.floor(9 + R.random() * 4);
+
+document.getElementById('age').textContent = 'age: ' + remainingSteps;
+document.getElementById('resolution').textContent = 'resolution: ' + NUM_POINTS;
 
 //homogenous random distribution around the center 0
-const hrandom = () => Math.random() * 2 - 1;
+const hrandom = () => R.random() * 2 - 1;
 
 class vertex {
   constructor(x, y, vx, vy, w) {
@@ -17,7 +27,7 @@ class vertex {
     if (vy == undefined)
       this.vy = hrandom();
     if (w == undefined)
-      this.w = Math.random() * 6;
+      this.w = R.random() * 6;
   }
 }
 
@@ -73,7 +83,7 @@ function generatePoints(seed) {
 
 
 
-var alpha = .1;
+var alpha = .02;
 //draw all points with a variable alpha
 function drawPoints() {
   c.fillStyle = `rgba(255, 255, 255, ${alpha})`;
@@ -90,25 +100,35 @@ function drawPoints() {
   }*/
 }
 
-const wind = { vx: 0, vy: 0, ax: 0, ay: 0 };
+
+const wind = { vx: 0, vy: 0 };
 //update all points
+var sumVx = 0;
 function updatePoints() {
+  remainingSteps--;
   for (const point of points) {
-    point.x += point.vx + wind.vx;
-    point.y += point.vy + wind.vy;
-    point.w *= .997;
+    //point.x += point.vx;
+    point.y += point.vy;
+    point.vx = hrandom() + wind.vx;
+    point.vy = hrandom() + wind.vy;
+    sumVx += point.vx - wind.vx;
+    //point.w *= .999;
   }
+  sumVx /= NUM_POINTS;
   drawPoints();
-  //wind.vx += wind.ax;
-  wind.vy += wind.ay;
-  wind.ax = hrandom() * .005;
-  wind.ay = hrandom() * .05 - .0025;
-  requestAnimationFrame(updatePoints);
+  wind.vx += sumVx;
+  wind.vy += hrandom() * .05;
+  if (remainingSteps > 0)
+    requestAnimationFrame(updatePoints);
+  else
+    console.log('finished');
+
 }
 
-generatePoints(Math.random() * 5)
+generatePoints(R.random() * 5)
 //prepare the canvas
 c.fillStyle = '#111';
 c.fillRect(0, 0, WIDTH, HEIGHT);
 
+console.log(remainingSteps);
 requestAnimationFrame(updatePoints);
