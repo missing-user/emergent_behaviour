@@ -75,7 +75,7 @@ function init() {  //initialize the shaders
     twgl.drawBufferInfo(gl, minimalVertexInfo);
   }
   //expose the function
-  var currentMode = 0;
+  var currentMode = 1;
   window.reinit = () => {
     currentMode++;
     initParticleTexture(currentMode % 5);
