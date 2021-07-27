@@ -159,7 +159,7 @@ function pointermove(e) {
   if (e.touches)
     e = e.touches[0]
 
-  if (mouseDown) {
+  if (mouseDown && !e.touches) {
     var rect = gl.canvas.getBoundingClientRect();
     mouse[0] = (e.clientX - rect.left) / gl.canvas.clientWidth;
     if (Math.abs(mouse[0]) > 1) mouse[0] = -5

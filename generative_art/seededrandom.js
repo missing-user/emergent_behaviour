@@ -32,5 +32,27 @@ class SeededRandom {
   random() {
     return this.sfc32(this.seedf(), this.seedf(), this.seedf(), this.seedf())();
   }
+
+  randomInt(a, b) {
+    //if both are set, return a random integer between them, otherwise return a random integer between 0 and the argument
+    if (a != undefined && b)
+      return a + Math.floor(this.random() * (b - a + 1));
+    else if (a && a > 0)
+      return Math.floor(this.random() * a);
+    else
+      console.log("input of randomInt(a,b) has to be a valid number", a, b);
+    return 0;
+  }
 }
 
+
+function initializeSeed() {
+  var seedQuery = location.search.substring(6);
+  var tseed = seedQuery ? seedQuery : Math.random().toString(36).substring(3)
+  document.getElementById('seed').textContent = tseed;
+  document.getElementById('seed').href = '?seed=' + tseed;
+  return tseed;
+}
+
+const seed = initializeSeed();
+const R = new SeededRandom(seed)

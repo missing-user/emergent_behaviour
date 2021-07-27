@@ -1,12 +1,6 @@
 var canvas = document.getElementById('canvas');
 const c = canvas.getContext("2d");
 
-var seedQuery = location.search.substring(6);
-var seed = seedQuery ? seedQuery : Math.random().toString(36).substring(3)
-document.getElementById('seed').textContent = seed;
-document.getElementById('seed').href = '?seed=' + seed;
-const R = new SeededRandom(seed)
-
 const WIDTH = canvas.width;
 const HEIGHT = canvas.height;
 const exponent = Math.floor(6 + R.random() * 8)
@@ -33,8 +27,8 @@ class vertex {
 }
 
 const points = [];
-function generatePoints(seed) {
-  switch (Math.floor(seed) % 5) {
+function generatePoints() {
+  switch (R.randomInt(5)) {
     case 0:
       // create the points on a circle
       for (let i = 0; i < NUM_POINTS; i++)
@@ -122,7 +116,7 @@ function updatePoints() {
 
 }
 
-generatePoints(R.random() * 5)
+generatePoints()
 //prepare the canvas
 //low chance to have a bright background with dark strokes
 if (R.random() < .05) {
