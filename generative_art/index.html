@@ -3,33 +3,34 @@
 
 <head>
   <meta charset="utf-8">
-  <title>Generative Art 1</title>
+  <title>Decay</title>
   <!-- MOBILE––––––––––––––––––––––– -->
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;600&display=swap" rel="stylesheet">
   <!-- CSS––––––––––––––––––––––– -->
   <link rel="stylesheet" href="../shared/css/normalize.css">
   <link rel="stylesheet" href="../shared/css/skeleton.css">
-  <link rel="stylesheet" href="../shared/css/darkskelleton.css" media="(prefers-color-scheme: dark)">
+  <link rel="stylesheet" href="../shared/css/darkskelleton.css">
   <link rel="stylesheet" href="../shared/css/style.css">
   <link rel="icon" type="image/png" href="/images/favicon.png">
+
 </head>
 
 <body>
   <div class="container" style="margin-top: 1em;">
     <a href="../">Back to Overview</a>
     <div class="row">
-      <h1>Generative Art 1</h1>
-      <p>Experimenting with algorithmic
-        <a href="https://en.wikipedia.org/wiki/Generative_art">art</a>.
+      <h1>Decay</h1>
+      <p>Experimenting with algorithmic art.
       </p>
+	  <span>seed:</span> <a href="" id="seed"></a>
+      <div id="age"></div>
+      <div id="resolution"></div>
     </div>
 
     <div class="row">
+	<hr>
       <canvas width="2048" height="2048" class="u-max-full-width" id="canvas"></canvas>
-      <span>seed:</span> <a href="" id="seed"></a>
-      <div id="age"></div>
-      <div id="resolution"></div>
     </div>
 
   </div>
