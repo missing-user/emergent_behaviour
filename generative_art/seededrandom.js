@@ -4,6 +4,11 @@ class SeededRandom {
     this.seedf = this.xmur3(seed);
   }
 
+  resetSeed(){
+    //resets the random object to the initial seed
+    this.seedf = this.xmur3(seed);
+  }
+
   xmur3(str) {
     for (var i = 0, h = 1779033703 ^ str.length; i < str.length; i++)
       h = Math.imul(h ^ str.charCodeAt(i), 3432918353),
@@ -40,7 +45,7 @@ class SeededRandom {
     else if (a && a > 0)
       return Math.floor(this.random() * a);
     else
-      console.log("input of randomInt(a,b) has to be a valid number", a, b);
+      console.error("input of randomInt(a,b) has to be a valid number", a, b);
     return 0;
   }
 }

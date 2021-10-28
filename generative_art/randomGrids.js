@@ -1,10 +1,11 @@
 var canvas = document.getElementById('canvas');
-const c = canvas.getContext("2d");
+const c = canvas.getContext("2d", { alpha: false });
+
 
 //Square canvas, of size SIDE x SIDE
 const SIDE = canvas.height = canvas.width;
 //the number of nodes per side
-const N = R.randomInt(5, 40);
+const N = R.randomInt(5, 50);
 
 c.fillRect(0, 0, SIDE, SIDE);
 c.fillStyle = 'rgb(255, 255, 255)';
