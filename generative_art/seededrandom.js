@@ -4,7 +4,7 @@ class SeededRandom {
     this.seedf = this.xmur3(seed);
   }
 
-  resetSeed(){
+  resetSeed() {
     //resets the random object to the initial seed
     this.seedf = this.xmur3(seed);
   }
@@ -59,5 +59,4 @@ function initializeSeed() {
   return tseed;
 }
 
-const seed = initializeSeed();
-const R = new SeededRandom(seed)
+var R = new SeededRandom(initializeSeed());

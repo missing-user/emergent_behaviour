@@ -11,8 +11,8 @@ var SIDE = tileSize*N;
 
 //for high res images:
 const resulutionFactor = 2
-canvas.height = canvas.width = resulutionFactor*(SIDE+tileSize)
-c.scale(resulutionFactor, resulutionFactor);
+canvas.height = canvas.width = resolutionFactor*(SIDE+tileSize)
+c.scale(resolutionFactor, resolutionFactor);
 
 c.fillRect(0, 0, canvas.width, canvas.height);
 c.lineWidth = 6;

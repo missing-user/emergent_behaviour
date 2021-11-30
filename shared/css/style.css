@@ -70,7 +70,7 @@ figure {
 }
 
 figure figcaption:before {
-  content: 'Fig. ' counter(figures) ' - ';
+  content: 'Fig. 'counter(figures) ' - ';
 }
 
 @media (prefers-color-scheme:dark) {
@@ -78,7 +78,11 @@ figure figcaption:before {
     color: #2e3436;
     border-color: #2e3436
   }
+
   ::selection {
     background: #729fcf;
   }
 }
+
+
+@media (min-width: 550px) {}
