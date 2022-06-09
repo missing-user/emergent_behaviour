@@ -11,11 +11,11 @@ const minimalVertexInfo = twgl.createBufferInfoFromArrays(gl, {
 });
 
 var mouse = [-1, -1];
-var disabled = false,
-  pause;
+var disabled = false;
+var pause;
 
 // Simulation constants
-var simSize = 512; // width & height of the simulation textures
+var simSize = 2048; // width & height of the simulation textures
 if (window.devicePixelRatio > 2) simSize = 512;
 var pCount = simSize * simSize;
 canvas.width = simSize;
@@ -82,6 +82,7 @@ function init() {
         u_speed: getRangeVal("movementspeed"),
         u_rotationRate: getRangeVal("rotationrate"),
         u_searchAngle: getRangeVal("searchangle"),
+        u_turnrandom: getRangeVal("turnrandom"),
         u_pheroTexture: diffusor.fb1.attachments[0],
         u_time: (Date.now() - startTime) / 1000,
       };
@@ -93,12 +94,15 @@ function init() {
       twgl.setBuffersAndAttributes(gl, textureRendererInfo, minimalVertexInfo);
       twgl.setUniforms(textureRendererInfo, {
         u_resolution: [gl.canvas.width, gl.canvas.height],
-        u_texture: diffusor.bufferTexture, // diffusor.fb2.attachments[0]
+        u_texture: diffusor.fb2.attachments[0], //diffusor.bufferTexture, // diffusor.fb2.attachments[0]
       });
       twgl.bindFramebufferInfo(gl);
       twgl.drawBufferInfo(gl, minimalVertexInfo);
 
       // render the current particles as red dots
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE);
+
       gl.useProgram(rendererInfo.program);
       twgl.setBuffersAndAttributes(gl, rendererInfo, pointsVertexInfo);
       twgl.setUniforms(rendererInfo, {
@@ -108,6 +112,8 @@ function init() {
       });
       twgl.bindFramebufferInfo(gl, diffusor.fb1);
       twgl.drawBufferInfo(gl, pointsVertexInfo, gl.POINTS);
+
+      gl.disable(gl.BLEND);
     }
     frameId = requestAnimationFrame(animate);
   }

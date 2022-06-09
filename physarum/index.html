@@ -29,7 +29,7 @@
         <h1>Physarum</h1>
         <p>
           Physarum Polycephalum is a slime mold that is able to solve shortest path problems, with astonsishing
-          efficiency. Inspired by the amazing art of <a href="https://cargocollective.com/sagejenson/physarum">Sage Jenson</a> </b>
+          efficiency. Inspired by the amazing art of <a href="https://cargocollective.com/sagejenson/physarum">Sage Jenson</a></b>
         </p>
       </div>
     </div>
@@ -41,23 +41,27 @@
       <canvas width="1024" height="1024" class="u-full-width" id="canvas"></canvas>
       
       <label>Search Angle
-        <input type="range" id="searchangle" value="0.3" min="0" max="1.6" step="any">
+        <input type="range" id="searchangle" value="0.2" min="0" max="1.6" step="any">
         <output for="#searchangle" id="searchangle_out" > </output>
+      </label>
+      <label>Turn Rate
+        <input type="range" id="rotationrate" value="0.35" min="0" max="1.6" step="any">
+        <output for="#rotationrate" id="rotationrate_out"> </output>
+      </label>
+      <label>Random Turn Probability
+        <input type="range" id="turnrandom" value="0.2" min="0" max=".5" step="any">
+        <output for="#turnrandom" id="turnrandom_out"> </output>
       </label>
       <label>Search Distance
         <input type="range" id="searchdistance" value="5" min="0" max="30" step="any">
         <output for="#searchdistance" id="searchdistance_out"> </output>
       </label>
       <label>Movement Speed
-        <input type="range" id="movementspeed" value="1" min="0" max="5" step="any">
+        <input type="range" id="movementspeed" value="1.5" min="0" max="5" step="any">
         <output for="#movementspeed" id="movementspeed_out"> </output>
       </label>
-      <label>Rotation Rate
-        <input type="range" id="rotationrate" value="0.3" min="0" max="1.6" step="any">
-        <output for="#rotationrate" id="rotationrate_out"> </output>
-      </label>
       <label>Evaporation Rate
-        <input type="range" id="evaporationrate" value=".9" min="0" max="1" step="any">
+        <input type="range" id="evaporationrate" value=".8" min="0" max="1" step="any">
         <output for="#evaporationrate" id="evaporationrate_out"> </output>
       </label>
     </div>
@@ -110,7 +114,7 @@
     void main() {
       //float c = 1. - length( .5 - gl_PointCoord.xy );
       //gl_FragColor=vec4(c, 0.,0.,1.);
-      gl_FragColor=vec4(1., 0., 0., .2);
+      gl_FragColor=vec4(1., 0., 0., .1);
     }
   </script>
 
@@ -183,6 +187,7 @@
     uniform float u_searchAngle;
     uniform float u_searchDistance;
     uniform float u_rotationRate;
+    uniform float u_turnrandom;
     uniform vec2 u_resolution;
     //u_texture is the data texture wit particle positions and velocities
     uniform sampler2D u_texture;
@@ -224,20 +229,24 @@
       */
 
       float tmp_speed = u_speed;
-
-			if (pheroC > pheroL && pheroC > pheroR) {
-			} else if (pheroL > pheroR) {
-				dir -= u_rotationRate;
-			} else if (pheroR > pheroL) {
-				dir += u_rotationRate;
-			} else {
-        if(n2rand(vec2(dir,u_time)).x>.5){
+      vec2 random = n2rand(vec2(dir,u_time));
+      if(u_turnrandom>random.x || pheroC > pheroL && pheroC > pheroR){
+        // random turn
+        if(random.y>.5){
           dir += u_rotationRate;
         }else{
           dir -= u_rotationRate;
         }
+      }else{
+        // regular turn
+        if (pheroL > pheroR) {
+          dir -= u_rotationRate;
+        } else if (pheroR > pheroL) {
+          dir += u_rotationRate;
+        }
+      }
 
-			}
+			
 
       vec2 vel = vec2(cos(dir), sin(dir)) * tmp_speed / u_resolution.x;
 
