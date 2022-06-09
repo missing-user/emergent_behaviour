@@ -123,7 +123,7 @@ function init() {
 function initIndices() {
   // uv positions for sprites in the vertex shader
   // (where in the sim texture do the particles get their simulation data from)
-  const simIndex = new Float32Array(~~(pCount / 2 ** 2));
+  const simIndex = new Float32Array(~~pCount / 2 ** 4);
   for (let x = 0; x < simSize; x++) {
     for (let y = 0; y < simSize; y++) {
       let i = (x * simSize + y) * 2;
@@ -155,8 +155,8 @@ class PingPongShader {
         format: gl.RGBA,
         type: gl.FLOAT,
         filter: gl.NEAREST,
-        wrapS: gl.CLAMP_TO_EDGE,
-        wrapT: gl.CLAMP_TO_EDGE,
+        wrapS: gl.REPEAT,
+        wrapT: gl.REPEAT,
       },
     ];
     this.fb1 = twgl.createFramebufferInfo(gl, attachments);
