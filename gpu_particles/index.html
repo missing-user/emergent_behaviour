@@ -21,8 +21,8 @@
     <div class="row">
       <h1>GPU Particles</h1>
       <h2>Overview</h2>
-      <p>Particle simulations - this time in parallel! Since the simulation is run as a shader on the GPU, it
-        can handle millions of particles at once!
+      <p>Particle simulations - this time in parallel! Every single point is being simulated independently, but since everything runs on the GPU, it
+        can handle millions of agents at once! Isn't WebGL awesome?
       </p>
     </div>
 
@@ -32,6 +32,12 @@
       </p>
       <button onclick="reinit()">change pattern</button>
       <canvas width="1024" height="1024" class="u-full-width" id="canvas"></canvas>
+
+      
+      <label>Mouse Force
+        <input type="range" id="mouseforce" value="0.0" min="-.05" max=".05" step="any">
+        <output for="#mouseforce" id="mouseforce_out"> </output>
+      </label>
     </div>
 
     <div class="row">
@@ -85,11 +91,20 @@
         initial conditions, interesting geometric patterns can form. One other example I'll be exploring soon, are
         <a href="../physarum/">agent based simulations of slime molds</a>.
       </p>
+
+      <h3>2022 Update</h3>
+      <p>
+        
+      </p>
     </div>
   </div>
 
   <!-- Minimal Vertex Shader -->
   <script id="vs" type="x-shader/x-vertex">
+    
+    precision highp float;
+    precision highp sampler2D;
+
     attribute vec4 a_position;
     void main() {
       gl_Position = a_position;
@@ -112,25 +127,31 @@
     }
 
     void main() {
-      vec2 uv =2.* gl_FragCoord.xy/u_resolution -1.;
+      vec2 uv = 2.* gl_FragCoord.xy/u_resolution -1.;
       //initial positions are in a grid, initial orientation is given by the blue channel [0,2pi]
       float dir;
+      vec2 vel;
       //for some reason switch wasn't working
       if(u_mode == 1){
-        dir = atan(uv.x, uv.y);
+        dir = atan(uv.y,uv.x);
       }else if(u_mode == 2){
         dir = cos(3.*uv.x)*sin(3.*uv.y)*2.*M_PI;
       }else if(u_mode == 3){
-        dir = acos(uv.x/uv.y);
+        dir = atan(uv.x, uv.y);
       }else if(u_mode == 4){
-        dir = uv.x/uv.y;
-      }else if(u_mode == 5){
-        dir = atan(uv.y,uv.x);
-      }else{
-        dir = n2rand(uv).x*2.*M_PI;
+        vel = (n2rand(uv)*2.-1.)* .15;
+      }else {
+        vel = vec2(sin(uv.y*M_PI*2.), sin(uv.x*M_PI*2.))* .07;
       }
 
-      gl_FragColor = vec4(uv, dir, 1.);
+      if(u_mode < 4 && u_mode > 0){
+        vel = vec2(cos(dir), sin(dir)) * .15;
+      }
+      
+      //gl_FragColor = vec4(uv, dir, 1.);
+
+      
+      gl_FragColor = vec4(uv, vel);
     }
   </script>
 
@@ -144,10 +165,10 @@
     uniform sampler2D u_simTexture; //simulation texture from pingpong buffer
 
     void main() {
-      vec4 simData = texture2D(u_simTexture, 2.*a_Index/u_simResolution-1.);
+      vec4 simData = texture2D(u_simTexture, a_Index);
       vec2 pos = simData.xy;
+      gl_PointSize = 1.;
       gl_Position = vec4(pos, .0, 1.);
-      gl_PointSize =1.0;
     }
   </script>
 
@@ -160,13 +181,14 @@
     uniform vec3 u_pColor;
       
     void main() {
-      gl_FragColor = vec4(u_pColor, 1.);
+      gl_FragColor = vec4(u_pColor, .35);
     }
   </script>
 
   <!-- update positions and velocities Shader -->
   <script type="x-shader/x-fragment" id="simShader">
-    precision mediump float;
+    precision highp float;
+    precision highp sampler2D;
 
     #define M_PI 3.141592653589793
 
@@ -178,13 +200,15 @@
     uniform sampler2D u_texture;
     uniform float u_dt;
   
-    uniform float D_a, D_b, f, k;
+    uniform vec2 u_mousePos;
+    uniform float u_force;
     
     void main() {
-      vec4 simData = texture2D(u_texture, gl_FragCoord.xy/u_simResolution);
+      vec4 simData = texture2D(u_texture, (gl_FragCoord.xy)/(u_resolution));
       vec2 pos = simData.xy;
       float dir = simData.z; 
-
+      /*
+      
       if (pos.x*pos.x+pos.y*pos.y>1.) {
         float centerDir = atan(-pos.y, -pos.x);
         float delta = mod(centerDir - dir + 3.*M_PI, 2.*M_PI) - M_PI;
@@ -194,10 +218,43 @@
           dir -=  u_rotationRate *u_dt;
         }
       }
-      // dir = mod(dir, 2.* M_PI);
-      vec2 vel = vec2(cos(dir), sin(dir)) * u_speed;
 
-      gl_FragColor = vec4(pos + vel*u_dt, dir, simData.w);
+      
+      pos = mod(pos+1.,2.)-1.;
+
+
+    
+      dir = mod(dir, 2.* M_PI);
+      vec2 vel = vec2(cos(dir), sin(dir)) * u_speed; // vel * u_dt
+      */
+      vec2 vel = simData.zw; 
+      
+      if(length(u_mousePos-pos) < .2){
+        vel -= (u_mousePos-pos)*u_force;
+      }
+
+      if(pos.x>1.){
+        pos.x = 1.;
+        vel.x = -vel.x;
+        dir = dir+M_PI;
+      }
+      if(pos.x<-1.){
+        pos.x = -1.;
+        vel.x = -vel.x;
+        dir = dir+M_PI;
+      }
+      if(pos.y>1.){
+        pos.y = 1.;
+        vel.y = -vel.y;
+        dir = dir+M_PI;
+      }
+      if(pos.y<-1.){
+        pos.y = -1.;
+        vel.y = -vel.y;
+        dir = dir+M_PI;
+      }
+      
+      gl_FragColor = vec4(pos+vel* u_dt, vel.x, vel.y);
     }
   </script>
 
