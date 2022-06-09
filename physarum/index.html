@@ -29,9 +29,7 @@
         <h1>Physarum</h1>
         <p>
           Physarum Polycephalum is a slime mold that is able to solve shortest path problems, with astonsishing
-          efficiency.
-          <b>The simulation isn't fully functional yet, the goal is to achieve <a
-              href="https://www.barradeau.com/2019/1103/">something like this</a>.</b>
+          efficiency. Inspired by the amazing art of <a href="https://cargocollective.com/sagejenson/physarum">Sage Jenson</a> </b>
         </p>
       </div>
     </div>
@@ -41,20 +39,26 @@
         <b style="color: red;">Due to WebGL issues, the simulation does not work on your device</b>
       </p>
       <canvas width="1024" height="1024" class="u-full-width" id="canvas"></canvas>
+      
       <label>Search Angle
-        <input type="range" id="searchangle" value=".7854" min="0" max="1.6" step="any">
+        <input type="range" id="searchangle" value="0.3" min="0" max="1.6" step="any">
+        <output for="#searchangle" id="searchangle_out" > </output>
       </label>
       <label>Search Distance
-        <input type="range" id="searchdistance" value="12" min="1" max="30" step="any">
+        <input type="range" id="searchdistance" value="5" min="0" max="30" step="any">
+        <output for="#searchdistance" id="searchdistance_out"> </output>
       </label>
       <label>Movement Speed
-        <input type="range" id="movementspeed" value="1.1" min=".1" max="2" step="any">
+        <input type="range" id="movementspeed" value="1" min="0" max="5" step="any">
+        <output for="#movementspeed" id="movementspeed_out"> </output>
       </label>
       <label>Rotation Rate
-        <input type="range" id="rotationrate" value="0.7854" min="0" max="1.6" step="any">
+        <input type="range" id="rotationrate" value="0.3" min="0" max="1.6" step="any">
+        <output for="#rotationrate" id="rotationrate_out"> </output>
       </label>
       <label>Evaporation Rate
-        <input type="range" id="evaporationrate" value=".9" min="0.8" max="1" step="any">
+        <input type="range" id="evaporationrate" value=".9" min="0" max="1" step="any">
+        <output for="#evaporationrate" id="evaporationrate_out"> </output>
       </label>
     </div>
   </div>
@@ -72,13 +76,14 @@
   <!-- Point Sprite Vertex Shader -->
   <script id="vs_points" type="x-shader/x-vertex">
     precision highp float;
+    precision highp sampler2D;
 
     attribute vec2 a_Index; // UV index of the sprite
     uniform vec2 u_resolution; // width/height of screen
     uniform sampler2D u_texture;
 
     void main() {
-      vec4 simData = texture2D(u_texture, a_Index/u_resolution);
+      vec4 simData = texture2D(u_texture, a_Index);
       vec2 pos = simData.xy;
       gl_Position = vec4(pos*2.-1., 0.0, 1.0);
       gl_PointSize = 1.0;
@@ -88,6 +93,7 @@
   <!-- Texture Render Shader -->
   <script type="x-shader/x-fragment" id="textureRenderShader">
     precision highp float;
+    precision highp sampler2D;
     
     uniform vec2 u_resolution;
     uniform sampler2D u_texture;
@@ -104,7 +110,7 @@
     void main() {
       //float c = 1. - length( .5 - gl_PointCoord.xy );
       //gl_FragColor=vec4(c, 0.,0.,1.);
-            gl_FragColor=vec4(1., 0., 0., 1.);
+      gl_FragColor=vec4(1., 0., 0., .2);
     }
   </script>
 
@@ -112,6 +118,7 @@
   <!-- Pheromone Diffusion Shader -->
   <script type="x-shader/x-fragment" id="diffusionShader">
     precision highp float;
+    precision highp sampler2D;
     
     uniform vec2 u_resolution;
     uniform vec2 u_mousePos;
@@ -121,10 +128,9 @@
     // write particles to r and g channels, those get cleared
     // diffuse b and w, add r and g to them
     vec2 getPixel(vec2 offset){
-      vec2 particleVal = texture2D(u_texture, (gl_FragCoord.xy+offset)/u_resolution).xy;
-      vec2 pheroVal = texture2D(u_texture, (gl_FragCoord.xy+offset)/u_resolution).zw;
-      //TODO figure out what the .5 does
-      return vec2(pheroVal + particleVal);
+      vec2 pheroVal = texture2D(u_texture, (gl_FragCoord.xy+offset)/u_resolution).ba;
+      vec2 particleVal = texture2D(u_texture, (gl_FragCoord.xy+offset)/u_resolution).rg;
+      return (pheroVal+particleVal);
     }
 
     float circle(vec2 uv){
@@ -133,17 +139,16 @@
     }
 
     void main() {
-     vec2 sum = getPixel(vec2(-1.,-1.)) + getPixel(vec2(0.,-1.)) + getPixel(vec2(1.,-1.))+
-                getPixel(vec2(-1.,0.)) + getPixel(vec2(0.)) + getPixel(vec2(1.,0.))+
-                getPixel(vec2(-1.,1.)) + getPixel(vec2(0.,1.)) + getPixel(vec2(1.,1.));
-     vec2 average = sum/9.;
-     vec2 mouseVal = vec2(0.1,1.)*circle(gl_FragCoord.xy/u_resolution);
+     vec2 sum = getPixel(vec2(-1.,-1.))/4. + getPixel(vec2(0.,-1.))/2. + getPixel(vec2(1.,-1.))/4.+
+                getPixel(vec2(-1.,0.))/2. + getPixel(vec2(0.)) + getPixel(vec2(1.,0.))/2.+
+                getPixel(vec2(-1.,1.))/4. + getPixel(vec2(0.,1.))/2. + getPixel(vec2(1.,1.))/4.;
+     vec2 average = sum/4.;
+     vec2 mouseVal = vec2(.8,1.)*circle(gl_FragCoord.xy/u_resolution);
      //not strictly necessary to evaporate the original particle trail
-     vec2 particleVal = texture2D(u_texture, (gl_FragCoord.xy)/u_resolution).xy;
-     vec4 color = vec4(0.,0., average*u_evaporationRate + mouseVal);
-     gl_FragColor = clamp(color, 0.001,1.);
-    //override, just show particles
-    gl_FragColor = vec4(particleVal.x*.8,color.gb,1.);
+     //vec2 particleVal = texture2D(u_texture, (gl_FragCoord.xy)/u_resolution).xy;
+     vec4 color = vec4(0.,0., (average + mouseVal)*u_evaporationRate );
+    gl_FragColor = clamp(color, 0.001,1.);
+    //gl_FragColor = color;
     }
   </script>
 
@@ -169,6 +174,7 @@
   <!-- update positions and velocities Shader -->
   <script type="x-shader/x-fragment" id="simShader">
     precision highp float;
+    precision highp sampler2D;
 
     #define M_PI 3.141592653589793
 
@@ -188,10 +194,10 @@
     }
 
     float getPheroAtAngle(float a,vec2 pos, float dir){
-      dir = mod(dir,2.*M_PI);
-      vec2 offset = vec2(cos(dir+a), sin(dir+a))*(u_searchDistance/u_resolution.x);
+      //dir = mod(dir,2.*M_PI);
+      vec2 offset = (vec2(cos(dir+a), sin(dir+a))/u_resolution)*u_searchDistance;
       vec4 pheroVal = texture2D(u_pheroTexture, pos+offset);
-      return pheroVal.z;
+      return pheroVal.b;
     }
     
     void main() {
@@ -202,6 +208,9 @@
       float pheroL = getPheroAtAngle(-u_searchAngle, pos, dir);
       float pheroC = getPheroAtAngle(0., pos, dir);
       float pheroR = getPheroAtAngle(u_searchAngle, pos, dir);
+
+      /*
+      //rotate towards center if at the edge
       if (pos.x>1. || pos.x<0. || pos.y>1. || pos.y<0.) {
         //if (pos.x*pos.x+pos.y*pos.y>1.) {
         float centerDir = atan(-pos.y+.5, -pos.x+.5);
@@ -211,29 +220,33 @@
         }else{
           dir -= .1;
         }
-      }else{
       }
+      */
 
-      
-      //rotate particles towards the feromone gradient
-      if(pheroC > pheroL && pheroC > pheroR){
-        // center highest
-      } else if(pheroL > pheroC && pheroR > pheroC){
-        //left and right both higher than center
+      float tmp_speed = u_speed;
+
+			if (pheroC > pheroL && pheroC > pheroR) {
+			} else if (pheroL > pheroR) {
+				dir -= u_rotationRate;
+			} else if (pheroR > pheroL) {
+				dir += u_rotationRate;
+			} else {
         if(n2rand(vec2(dir,u_time)).x>.5){
           dir += u_rotationRate;
         }else{
           dir -= u_rotationRate;
         }
-      }else if(pheroL > pheroR){
-        dir -= u_rotationRate;
-      }else if(pheroR > pheroL){
-        dir += u_rotationRate;
-      }
+
+			}
+
+      vec2 vel = vec2(cos(dir), sin(dir)) * tmp_speed / u_resolution.x;
+
+      vec2 newPos = pos+vel;
+
+      //newPos = clamp(newPos,.0,1.);
+      newPos = mod(newPos,1.);
       
-      vec2 vel = vec2(cos(dir), sin(dir)) * u_speed / u_resolution.x;
-      //vec2 newPos = mod(pos + vel,1.);
-      gl_FragColor = vec4(pos + vel, dir, simData.w);
+      gl_FragColor = vec4(newPos, dir, simData.w);
     }
   </script>
 
