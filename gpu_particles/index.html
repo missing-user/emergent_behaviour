@@ -24,6 +24,13 @@
       <p>Particle simulations - this time in parallel! Every single point is being simulated independently, but since everything runs on the GPU, it
         can handle millions of agents at once! Isn't WebGL awesome?
       </p>
+      <p class="mobileOnly">
+        <b>
+          This Demo is only available on desktop browsers, since most mobile devices don't currently support the required FLOAT textures. 
+          
+          <br> If it works at all, you might encounter blocky artefacts, due to the 8bit half-floats on some Android phones.
+        </b>
+      </p>
     </div>
 
     <div class="row">
@@ -93,9 +100,44 @@
       </p>
 
       <h3>2022 Update</h3>
+      <h2>What's worse than an off-by-one error? An off-by-one-half error!</h2>
       <p>
-        
+        After a several month break from the project, I took a closer look and noticed a major bug! I was sampling the texture containing the positions and velocities of every particle at the wrong places!
+        Instead of sampling the individual pixels, i was sampling the border between the pixels. Particles that were close in the simulation texture were "bleeding" into each other, and their positions and velocities were being averaged.
       </p>
+      <figure>
+        <img src="../shared/images/sampling_strategy.png" loading="lazy" class="u-max-full-width"
+          alt="My original (wrong) sampling strategy in red, the correct sampling in green">
+        <figcaption>My original (wrong) sampling strategy in red, the correct sampling points in green</figcaption>
+      </figure>
+       
+      <p>
+        Because many of the patterns had locally similiar velocities anyways, it wasn't very noticable and only started causing issues when I started reusing the code for the Physarum simulation. 
+        The fix was annoyingly simple, just offset the samples by half a pixel in each direction. Now each pixel is sampled at the center of the pixel, and the particles are not influencing each other anymore.
+
+      </p>
+      <h2>Future optimizations</h2>
+      <p>There is one more thing I'd eventually like to implement. Right now the implementation is using 16bit float textures, which aren't widely supported, especially on mobile devices. 
+        By encoding one 16bit float into two unsigned bytes, I could work around the issue and make it work on most devices. Something I learned through this project, was that some Android phones have partial support for float textures, in the form of 8bit floats.
+      <br>As most of you will know, 8bits isn't very much to store a floating point number, leading to interesting artifacts like the following one:</p>
+         
+      <video class="u-full-width" width="950" height="950" controls loop>
+        <source src="../shared/images/blocky_light.mp4" type="video/mp4"  media="(prefers-color-scheme:light)">
+        <source src="../shared/images/blocky_dark.mp4" type="video/mp4" media="(prefers-color-scheme:dark)">
+      Your browser does not support the video tag.
+      </video>
+      <p>
+        The blocky patterns we see are litterally the numerical resolution of the phones GPU, isn't that cool?
+        <br>
+        BTW, This is how the pattern is supposed to look with full 16bit resolution:
+      </p>
+      
+      <figure>
+        <img src="../shared/images/geometry_light.png" loading="lazy" class="u-max-full-width"
+          alt="GPU particle pattern with full 16bit resolution">
+        <figcaption>GPU particle pattern using the full 16bit resolution</figcaption>
+      </figure>
+      
     </div>
   </div>
 
