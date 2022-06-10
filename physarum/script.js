@@ -124,7 +124,7 @@ function init() {
 function initIndices() {
   // uv positions for sprites in the vertex shader
   // (where in the sim texture do the particles get their simulation data from)
-  const simIndex = new Float32Array(~~pCount / 2 ** 4);
+  const simIndex = new Float32Array(~~pCount / 2 ** 2);
   for (let x = 0; x < simSize; x++) {
     for (let y = 0; y < simSize; y++) {
       let i = (x * simSize + y) * 2;
