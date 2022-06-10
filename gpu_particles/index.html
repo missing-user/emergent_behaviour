@@ -118,8 +118,10 @@
       </p>
       <h2>Future optimizations</h2>
       <p>There is one more thing I'd eventually like to implement. Right now the implementation is using 16bit float textures, which aren't widely supported, especially on mobile devices. 
-        By encoding one 16bit float into two unsigned bytes, I could work around the issue and make it work on most devices. Something I learned through this project, was that some Android phones have partial support for float textures, in the form of 8bit floats.
-      <br>As most of you will know, 8bits isn't very much to store a floating point number, leading to interesting artifacts like the following one:</p>
+        By encoding one 16bit float into two unsigned bytes, I could work around the issue and make it work on most devices.
+        <br>
+        Something I learned through this project, was that some Android phones have partial support for float textures, in the form of 8bit floats.
+    As most of you will know, 8bits isn't very much to store a floating point number, leading to interesting artifacts like the following one:</p>
          
       <video class="u-full-width" width="950" height="950" controls loop>
         <source src="../shared/images/blocky_light.mp4" type="video/mp4"  media="(prefers-color-scheme:light)">
