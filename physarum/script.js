@@ -65,6 +65,7 @@ function init() {
 
   function animate() {
     if (!pause) {
+      gl.disable(gl.DEPTH_TEST);
       //diffuse pheromones
       diffusor.uniforms = {
         u_resolution: [gl.canvas.width, gl.canvas.height],
@@ -199,7 +200,6 @@ function enableFloatTextures(gl) {
   }
   if (!gl.getExtension("OES_texture_float")) webglError();
   if (!gl.getExtension("OES_texture_float_linear")) webglError();
-  gl.disable(gl.DEPTH_TEST);
 }
 
 init();

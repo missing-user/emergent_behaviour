@@ -31,6 +31,13 @@
           Physarum Polycephalum is a slime mold that is able to solve shortest path problems, with astonsishing
           efficiency. Inspired by the amazing art of <a href="https://cargocollective.com/sagejenson/physarum">Sage Jenson</a></b>
         </p>
+        <p class="mobileOnly">
+          <b>
+            This Demo is only available on desktop browsers, since most mobile devices don't currently support the required FLOAT textures. 
+          </b>
+<br>
+          You can find some <a href="#examples">video examples</a> at the bottom of the page. 
+        </p>
       </div>
     </div>
 
@@ -65,7 +72,39 @@
         <output for="#evaporationrate" id="evaporationrate_out"> </output>
       </label>
     </div>
+
+    <div class="row" style="margin-top: 8rem;">
+      <h2 id="examples">Interesting results</h2>
+      <p>Here are some videos with cool results that can be achieved. 
+      
+      <p class="mobileOnly">The videos are between 1MB and 5MB, so beware if you're on mobile data.</p>
+      <video class="u-full-width" width="930" height="930" controls loop>
+        <source src="circles.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+      </video>
+      
+      <video class="u-full-width" width="930" height="930" controls loop>
+        <source src="nets.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+      </video>
+      
+      <video class="u-full-width" width="930" height="930" controls loop>
+        <source src="physarum.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+      </video>
+      
+      <video class="u-full-width" width="930" height="930" controls loop>
+        <source src="snakes.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+      </video>
+      
+      <video class="u-full-width" width="930" height="930" controls loop>
+        <source src="waves.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+      </video>
+    </div>
   </div>
+
 
   <!-- Minimal Vertex Shader -->
   <script id="vs" type="x-shader/x-vertex">
@@ -79,7 +118,7 @@
 
   <!-- Point Sprite Vertex Shader -->
   <script id="vs_points" type="x-shader/x-vertex">
-    precision highp float;
+    precision mediump float;
     precision highp sampler2D;
 
     attribute vec2 a_Index; // UV index of the sprite
@@ -110,7 +149,7 @@
 
   <!-- Particle Render Shader -->
   <script type="x-shader/x-fragment" id="renderShader">
-    precision highp float;      
+    precision mediump float;      
     void main() {
       //float c = 1. - length( .5 - gl_PointCoord.xy );
       //gl_FragColor=vec4(c, 0.,0.,1.);
@@ -121,8 +160,8 @@
 
   <!-- Pheromone Diffusion Shader -->
   <script type="x-shader/x-fragment" id="diffusionShader">
-    precision highp float;
-    precision highp sampler2D;
+    precision mediump float;
+    precision mediump sampler2D;
     
     uniform vec2 u_resolution;
     uniform vec2 u_mousePos;
@@ -189,6 +228,7 @@
     uniform float u_rotationRate;
     uniform float u_turnrandom;
     uniform vec2 u_resolution;
+
     //u_texture is the data texture wit particle positions and velocities
     uniform sampler2D u_texture;
     uniform sampler2D u_pheroTexture;
@@ -204,7 +244,7 @@
       vec4 pheroVal = texture2D(u_pheroTexture, pos+offset);
       return pheroVal.b;
     }
-    
+
     void main() {
       vec4 simData = texture2D(u_texture, gl_FragCoord.xy/u_resolution);
       vec2 pos = simData.xy;
@@ -213,20 +253,6 @@
       float pheroL = getPheroAtAngle(-u_searchAngle, pos, dir);
       float pheroC = getPheroAtAngle(0., pos, dir);
       float pheroR = getPheroAtAngle(u_searchAngle, pos, dir);
-
-      /*
-      //rotate towards center if at the edge
-      if (pos.x>1. || pos.x<0. || pos.y>1. || pos.y<0.) {
-        //if (pos.x*pos.x+pos.y*pos.y>1.) {
-        float centerDir = atan(-pos.y+.5, -pos.x+.5);
-        float delta = mod(centerDir - dir + 3.*M_PI, 2.*M_PI) - M_PI;
-        if(delta > 0.){
-          dir += .1;
-        }else{
-          dir -= .1;
-        }
-      }
-      */
 
       float tmp_speed = u_speed;
       vec2 random = n2rand(vec2(dir,u_time));
@@ -246,15 +272,11 @@
         }
       }
 
-			
-
       vec2 vel = vec2(cos(dir), sin(dir)) * tmp_speed / u_resolution.x;
 
       vec2 newPos = pos+vel;
-
-      //newPos = clamp(newPos,.0,1.);
       newPos = mod(newPos,1.);
-      
+
       gl_FragColor = vec4(newPos, dir, simData.w);
     }
   </script>

@@ -83,3 +83,10 @@ figure figcaption:before {
     background: #729fcf;
   }
 }
+
+
+@media (min-width: 550px) {
+  .mobileOnly{
+    display: none;
+  }
+}
