@@ -143,7 +143,7 @@
       
     void main() {
       vec4 texValue = texture2D(u_texture, gl_FragCoord.xy/u_resolution);
-      gl_FragColor = vec4(texValue.bbb-vec3(0.,texValue.rr)/3.,1.);
+      gl_FragColor = vec4(texValue.rrb,1.);
     }
   </script>
 

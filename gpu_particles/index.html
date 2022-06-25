@@ -26,9 +26,7 @@
       </p>
       <p class="mobileOnly">
         <b>
-          This Demo is only available on desktop browsers, since most mobile devices don't currently support the required FLOAT textures. 
-          
-          <br> If it works at all, you might encounter blocky artefacts, due to the 8bit half-floats on some Android phones.
+          This Demo is only available on desktop browsers, since most mobile devices don't currently support the required FLOAT textures. I've explained the details at <a href="#floatBug">the bottom of this page</a>.
         </b>
       </p>
     </div>
@@ -99,8 +97,8 @@
         <a href="../physarum/">agent based simulations of slime molds</a>.
       </p>
 
-      <h3>2022 Update</h3>
-      <h2>What's worse than an off-by-one error? An off-by-one-half error!</h2>
+      <h3 id="floatBug">2022 Update</h3>
+      <h4>What's worse than an off-by-one error? An off-by-one-half error!</h4>
       <p>
         After a several month break from the project, I took a closer look and noticed a major bug! I was sampling the texture containing the positions and velocities of every particle at the wrong places!
         Instead of sampling the individual pixels, i was sampling the border between the pixels. Particles that were close in the simulation texture were "bleeding" into each other, and their positions and velocities were being averaged.
